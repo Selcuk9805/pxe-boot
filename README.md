@@ -21,9 +21,9 @@ cd /home/damar/Masaüstü/pxe
 
 # .env oluştur
 cp .env.example .env
-# .env'i düzenleyip PXE_SERVER_IP kontrol edin (varsayılan: 10.30.1.20)
+# .env'i düzenleyip PXE_SERVER_IP ve NETWORK_SUBNET kısımlarını kendi ağınıza göre güncelleyin.
 
-# Kurulum scriptini çalıştır (iPXE + wimboot indirir)
+# Kurulum scriptini çalıştır (iPXE + wimboot indirir, .env ayarlarınızı projedeki konfigürasyonlara uygular)
 make setup
 ```
 
@@ -57,7 +57,7 @@ make logs-http   # HTTP dosya erişimleri
 
 | Konteyner | Görev | Port |
 |-----------|-------|------|
-| `pxe-dhcp` | DHCP Proxy + TFTP (dnsmasq) | 67/udp, 69/udp |
+| `pxe-dhcp` | DHCP Proxy, TFTP Sunucusu (dnsmasq) ve DNS | 67/udp, 69/udp |
 | `pxe-http` | HTTP dosya sunucu (nginx) | 80/tcp |
 | `pxe-nfs` | NFS sunucusu (Persistent boot) | 2049/tcp |
 
@@ -99,6 +99,7 @@ pxe/
 ├── isos/                    ← Ham ISO'ları buraya koyun
 └── scripts/
     ├── setup.sh
+    ├── apply-env.sh             (IPleri otomatik şablonlar)
     ├── extract-debian-install.sh
     ├── extract-debian-live.sh
     ├── setup-persistent.sh  (sudo gerekli)
@@ -177,6 +178,7 @@ Güvenlik duvarı portları (sunucu makinesinde açılmalı):
 make start              # Başlat
 make stop               # Durdur
 make status             # Durum
+make apply-env          # .env değişikliklerini projeye zorunlu uygula
 make logs               # Tüm loglar
 make logs-dhcp          # DHCP/TFTP logları (boot trafik izleme)
 make logs-http          # HTTP erişim logları
@@ -191,10 +193,10 @@ make logs-http          # HTTP erişim logları
 
 **squashfs yüklenmiyor:**
 → `make logs-http` ile HTTP erişim logunu kontrol edin.  
-→ `curl http://10.30.1.20/boot/debian-live/live/filesystem.squashfs` ile test edin.
+→ `curl http://<PXE_SERVER_IP>/boot/debian-live/live/filesystem.squashfs` ile test edin.
 
 **NFS mount başarısız:**
-→ `showmount -e 10.30.1.20` komutuyla export'ları kontrol edin.  
+→ `showmount -e <PXE_SERVER_IP>` komutuyla export'ları kontrol edin.  
 → `make logs-nfs` ile NFS loglarına bakın.
 
 Daha fazlası için: **[NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)**
