@@ -37,6 +37,7 @@ echo -e "${YELLOW}[!] IP adresleri güncelleniyor: -> $PXE_SERVER_IP${NC}"
 if [ -f "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf" ]; then
     sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
     sed -i -E "s|^dhcp-range=$IP_REGEX,proxy|dhcp-range=$NETWORK_SUBNET,proxy|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+    sed -i -E "s|^(dhcp-boot=.*,,)$IP_REGEX$|\1$PXE_SERVER_IP|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
 
     # LISTEN_INTERFACE ayarı (opsiyonel)
     if [ -n "${LISTEN_INTERFACE:-}" ]; then

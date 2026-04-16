@@ -142,6 +142,32 @@ curl -v http://10.30.1.20/boot.ipxe
 curl -v http://10.30.1.20/boot/debian-install/vmlinuz
 ```
 
+### "UEFI PXE başlıyor ama firmware ekranına geri dönüyor" senaryosu
+
+Bu belirti genellikle aşağıdaki 3 nedenden biridir:
+
+1. **Secure Boot açık** ve kullanılan `ipxe.efi/snponly.efi` imzasız.
+2. UEFI firmware, ProxyDHCP'de sadece bir kısmını işler (PXE menu vs `dhcp-boot` farkı).
+3. UEFI PXE ROM, TFTP blocksize negotiation (OACK) ile uyumsuzdur.
+
+Kontrol adımları:
+
+```bash
+# 1) DHCP/TFTP loglarında UEFI istemciyi doğrula
+make logs-dhcp
+
+# 2) TFTP istekleri gerçekten geliyor mu?
+sudo tcpdump -i any -n port 69
+
+# 3) UEFI istemci için sunulan dosya adı ne?
+# Beklenen: snponly.efi (veya fallback olarak ipxe.efi)
+```
+
+Ek notlar:
+- Projede UEFI için varsayılan ilk aşama dosya `snponly.efi` olarak ayarlanmıştır.
+- `tftp-no-blocksize` açık tutulur; sorunlu firmware'lerde kritik fark yaratır.
+- Secure Boot aktifse, test için geçici olarak kapatıp tekrar deneyin.
+
 ### "NFS mount başarısız" senaryosu
 
 ```bash
