@@ -53,22 +53,22 @@ goto ${target}
 # ── Seçim İşleyicileri ──────────────────────────────────────
 :debian-install
 echo ${gr}>> Debian 12 Kurulum yukleniyor...${nl}
-chain --autofree ${server-url}/boot/debian-install/debian-install.ipxe || goto failed
+chain --autofree ${server-url}/boot/debian-install/debian-install.ipxe || goto failed-install
 goto banner
 
 :debian-live
 echo ${gr}>> Debian 12 Live yukleniyor (squashfs HTTP fetch)...${nl}
-chain --autofree ${server-url}/boot/debian-live/debian-live.ipxe || goto failed
+chain --autofree ${server-url}/boot/debian-live/debian-live.ipxe || goto failed-live
 goto banner
 
 :debian-persist
 echo ${gr}>> Debian 12 Persistent (NFS root) yukleniyor...${nl}
-chain --autofree ${server-url}/boot/debian-persistent/debian-persistent.ipxe || goto failed
+chain --autofree ${server-url}/boot/debian-persistent/debian-persistent.ipxe || goto failed-persist
 goto banner
 
 :winpe
 echo ${gr}>> WinPE yukleniyor...${nl}
-chain --autofree ${server-url}/boot/winpe/winpe.ipxe || goto failed
+chain --autofree ${server-url}/boot/winpe/winpe.ipxe || goto failed-winpe
 goto banner
 
 :shell
@@ -84,6 +84,38 @@ exit 0
 echo
 echo ${rd}  [!] HATA: Boot dosyasi yuklenemedi.${nl}
 echo ${ye}      Sunucu erisimini kontrol edin: ${server-url}${nl}
+echo
+sleep 5
+goto banner
+
+:failed-install
+echo
+echo ${rd}  [!] Debian Install dosyalari eksik olabilir.${nl}
+echo ${ye}      Sunucuda calistir: make extract-install${nl}
+echo
+sleep 5
+goto banner
+
+:failed-live
+echo
+echo ${rd}  [!] Debian Live dosyalari eksik olabilir.${nl}
+echo ${ye}      Sunucuda calistir: make extract-live ISO=isos/debian-live-*.iso${nl}
+echo
+sleep 5
+goto banner
+
+:failed-persist
+echo
+echo ${rd}  [!] Debian Persistent dosyalari eksik olabilir.${nl}
+echo ${ye}      Sunucuda calistir: sudo make setup-persistent${nl}
+echo
+sleep 5
+goto banner
+
+:failed-winpe
+echo
+echo ${rd}  [!] WinPE dosyalari eksik olabilir.${nl}
+echo ${ye}      Sunucuda calistir: make extract-winpe ISO=isos/winpe.iso${nl}
 echo
 sleep 5
 goto banner

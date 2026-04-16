@@ -1,202 +1,126 @@
 # PXE Boot Sunucusu
 
-Docker tabanlı, tam donanımlı ağ önyükleme (network boot) sunucusu.
+Docker tabanlı PXE ortamı (DHCP Proxy + TFTP + HTTP + NFS).
 
-**Desteklenen önyükleme modları:**
+## Desteklenen Modlar
+
 | # | Mod | Açıklama |
 |---|-----|----------|
-| 1 | Debian 12 Kurulum | Ağ üzerinden tam Debian kurulumu |
-| 2 | Debian 12 Live | Geçici oturum, RAM'de çalışır |
-| 3 | Debian 12 Persistent | NFS kök sistemi, kalıcı değişiklikler |
-| 4 | WinPE | Windows Preinstallation Environment |
+| 1 | Debian 12 Kurulum | Netinstall (kernel/initrd HTTP) |
+| 2 | Debian 12 Live | Geçici oturum (squashfs HTTP fetch) |
+| 3 | Debian 12 Persistent | NFS root (kalıcı) |
+| 4 | WinPE | wimboot + WIM |
 
 ---
 
 ## Hızlı Başlangıç
 
-### 1. Kurulum
-
 ```bash
 cd /home/damar/Masaüstü/pxe
-
-# .env oluştur
 cp .env.example .env
-# .env'i düzenleyip PXE_SERVER_IP ve NETWORK_SUBNET kısımlarını kendi ağınıza göre güncelleyin.
+# .env içinde PXE_SERVER_IP ve NETWORK_SUBNET değerlerini düzenleyin.
 
-# Kurulum scriptini çalıştır (iPXE + wimboot indirir, .env ayarlarınızı projedeki konfigürasyonlara uygular)
-make setup
+make setup     # Altyapı + iPXE/wimboot + temel içerik hazırlığı
+make doctor    # Eksik dosya/konfig kontrolü
+make start     # Sadece konteynerleri başlatır
 ```
 
-### 2. Debian Kurulum için Dosya Hazırlama
+Log takibi:
 
 ```bash
-# İnternetten otomatik indir (ISO gerekmez)
+make logs-dhcp
+make logs-http
+```
+
+---
+
+## Komut Akışı (Önerilen)
+
+- `make setup`:
+    - script kurulumunu yapar
+    - `make prepare` çağırır
+- `make prepare`:
+    - eksikse Debian install dosyalarını hazırlar (`vmlinuz`, `initrd.gz`)
+    - Live/Persistent/WinPE için eksik içerikleri bilgilendirir
+- `make start`:
+    - sadece servisleri başlatır (otomatik indirme yapmaz)
+- `make doctor`:
+    - gerekli artifact ve dnsmasq config kontrolü
+
+---
+
+## İçerik Hazırlama
+
+### Debian Install (zorunlu)
+
+```bash
 make extract-install
 ```
 
-### 3. Debian Live için ISO İşleme
+### Debian Live (opsiyonel)
 
 ```bash
-# ISO'yu isos/ dizinine kopyalayın, sonra:
 make extract-live ISO=isos/debian-live-12-amd64-gnome.iso
 ```
 
-### 4. Sunucuyu Başlat
+### Debian Persistent (opsiyonel)
 
 ```bash
-make start
+sudo make setup-persistent
+```
 
-# Logları izle
-make logs-dhcp   # DHCP/TFTP trafiği
-make logs-http   # HTTP dosya erişimleri
+### WinPE (opsiyonel)
+
+```bash
+make extract-winpe ISO=isos/winpe.iso
 ```
 
 ---
 
 ## Servisler
 
-| Konteyner | Görev | Port |
-|-----------|-------|------|
-| `pxe-dhcp` | DHCP Proxy, TFTP Sunucusu (dnsmasq) ve DNS | 67/udp, 69/udp |
-| `pxe-http` | HTTP dosya sunucu (nginx) | 80/tcp |
-| `pxe-nfs` | NFS sunucusu (Persistent boot) | 2049/tcp |
+| Servis | Görev | Port |
+|--------|-------|------|
+| pxe-dhcp | dnsmasq (DHCP Proxy + TFTP) | 67/udp, 69/udp |
+| pxe-http | nginx (boot dosyaları) | 80/tcp |
+| pxe-nfs | NFS (persistent) | 2049/tcp, 111/tcp+udp |
 
-> `pxe-dhcp` `network_mode: host` ile çalışır. DHCP broadcast'leri için zorunludur.
-
----
-
-## Dizin Yapısı
-
-```
-pxe/
-├── docker-compose.yml
-├── .env                     ← Yapılandırın!
-├── Makefile
-├── NETWORK_SETUP_NOTES.md   ← Router notları
-│
-├── config/
-│   ├── dnsmasq/dnsmasq.conf ← DHCP proxy + TFTP ayarları
-│   ├── nginx/nginx.conf     ← HTTP sunucu ayarları
-│   └── nfs/exports          ← NFS export tanımları
-│
-├── tftp/                    ← iPXE binary'leri (setup.sh indirir)
-│   ├── ipxe.efi             (UEFI)
-│   └── undionly.kpxe        (Legacy BIOS)
-│
-├── http/                    ← Nginx kök dizini
-│   ├── boot.ipxe            ← Ana boot menüsü
-│   ├── wimboot              (setup.sh indirir)
-│   └── boot/
-│       ├── debian-install/  ← vmlinuz + initrd.gz (extract-debian-install.sh)
-│       ├── debian-live/     ← vmlinuz + initrd.img + live/filesystem.squashfs
-│       ├── debian-persistent/ ← kernel + initrd (setup-persistent.sh)
-│       └── winpe/           ← boot.wim + BCD + boot.sdi
-│
-├── nfs/
-│   ├── debian-live/         ← (opsiyonel NFS live root)
-│   └── persistent/base/     ← Debian NFS kök (setup-persistent.sh kurar)
-│
-├── isos/                    ← Ham ISO'ları buraya koyun
-└── scripts/
-    ├── setup.sh
-    ├── apply-env.sh             (IPleri otomatik şablonlar)
-    ├── extract-debian-install.sh
-    ├── extract-debian-live.sh
-    ├── setup-persistent.sh  (sudo gerekli)
-    └── extract-winpe.sh
-```
+> `pxe-dhcp` host network kullanır. DHCP broadcast için gereklidir.
 
 ---
 
-## Boot Senaryoları
+## UEFI/Legacy Notu
 
-### Debian 12 Kurulum (Net Install)
-- Kernel + initrd yerel HTTP sunucusundan
-- Debian paketleri kurulum sırasında internet'ten indirilir
-- Hazırlık: `make extract-install`
-
-### Debian 12 Live (Geçici)
-- squashfs HTTP `fetch=` ile RAM'e yüklenir
-- Kapanınca tüm değişiklikler kaybolur
-- Hazırlık: `make extract-live ISO=<path>`
-
-### Debian 12 Persistent (NFS Kök)
-- Tam Debian sistemi NFS üzerinde çalışır
-- Değişiklikler NFS sunucusunda kalıcı olarak saklanır
-- Hazırlık: `sudo make setup-persistent` (debootstrap çalıştırır, ~15 dk)
-
-### WinPE
-- wimboot + WIM dosyası HTTP üzerinden yüklenir
-- Windows ADK ile oluşturulmuş ISO gerekir
-- Hazırlık: `make extract-winpe ISO=isos/winpe.iso`
-
----
-
-## Boot Akışı
-
-```
-[İstemci NIC]
-    │
-    │ DHCP broadcast
-    ▼
-[dnsmasq PROXY] ──── TFTP ────► ipxe.efi (UEFI)
-                                 undionly.kpxe (BIOS)
-                                      │
-                                      │ iPXE başlar
-                                      ▼
-                           [iPXE DHCP] ──── HTTP ────► boot.ipxe (menü)
-                                                           │
-                           ┌───────────────────────────────┤
-                           │               │               │
-                    debian-install   debian-live     debian-persist
-                    vmlinuz+initrd   squashfs HTTP   NFS root boot
-                           │               │               │
-                           └───────── [Nginx HTTP] ────────┘
-                                               │
-                                          [NFS Server]
-                                        (Persistent için)
-```
-
----
-
-## Ağ Notları
-
-> ⚠️ **DHCP proxy modu** için genellikle router'da değişiklik gerekmez.
-> Detaylar için: **[NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)**
-
-Güvenlik duvarı portları (sunucu makinesinde açılmalı):
-- **67, 68/udp** — DHCP
-- **69/udp** — TFTP  
-- **80/tcp** — HTTP (kernel, squashfs, WIM)
-- **2049/tcp, 111/tcp+udp** — NFS (Persistent boot için)
-
----
-
-## Sık Kullanılan Komutlar
-
-```bash
-make start              # Başlat
-make stop               # Durdur
-make status             # Durum
-make apply-env          # .env değişikliklerini projeye zorunlu uygula
-make logs               # Tüm loglar
-make logs-dhcp          # DHCP/TFTP logları (boot trafik izleme)
-make logs-http          # HTTP erişim logları
-```
+- Legacy: `undionly.kpxe`
+- UEFI: `snponly.efi` (Hyper-V dahil daha stabil)
+- iPXE menü: `http://<PXE_SERVER_IP>/boot.ipxe`
 
 ---
 
 ## Sorun Giderme
 
-**Boot döngüsü (iPXE kendini tekrar yükliyor):**
-→ `dnsmasq.conf` içinde `dhcp-match=set:ipxe,175` ve `dhcp-boot=tag:ipxe,...` satırlarını kontrol edin.
+### Menüde `Not Found` (Debian seçenekleri)
 
-**squashfs yüklenmiyor:**
-→ `make logs-http` ile HTTP erişim logunu kontrol edin.  
-→ `curl http://<PXE_SERVER_IP>/boot/debian-live/live/filesystem.squashfs` ile test edin.
+Eksik içerik vardır. Aşağıdakileri çalıştırın:
 
-**NFS mount başarısız:**
-→ `showmount -e <PXE_SERVER_IP>` komutuyla export'ları kontrol edin.  
-→ `make logs-nfs` ile NFS loglarına bakın.
+```bash
+make prepare
+make doctor
+```
 
-Daha fazlası için: **[NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)**
+### UEFI mavi iPXE ekranı sonrası düşüş
+
+```bash
+make logs-dhcp
+make logs-http
+sudo tcpdump -i any -nn 'port 67 or port 68 or port 69 or port 4011'
+```
+
+### NFS mount sorunu
+
+```bash
+showmount -e <PXE_SERVER_IP>
+make logs-nfs
+```
+
+Detaylı ağ notları: [NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)
