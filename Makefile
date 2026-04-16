@@ -36,11 +36,13 @@ apply-env:
 # ─── Konteyner Yönetimi ───────────────────────────────────────
 start:
 	@docker compose up -d
+	@PXE_IP=$$(grep '^PXE_SERVER_IP=' .env 2>/dev/null | cut -d= -f2); \
+	if [ -z "$$PXE_IP" ]; then PXE_IP="10.30.1.20"; fi; \
 	@echo ""
 	@echo "  PXE sunucusu başlatıldı!"
-	@echo "  TFTP : tftp://10.30.1.20"
-	@echo "  HTTP : http://10.30.1.20"
-	@echo "  NFS  : nfs://10.30.1.20:2049"
+	@echo "  TFTP : tftp://$$PXE_IP"
+	@echo "  HTTP : http://$$PXE_IP"
+	@echo "  NFS  : nfs://$$PXE_IP:2049"
 	@echo ""
 
 stop:

@@ -37,12 +37,22 @@ echo -e "${YELLOW}[!] IP adresleri güncelleniyor: -> $PXE_SERVER_IP${NC}"
 if [ -f "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf" ]; then
     sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
     sed -i -E "s|^dhcp-range=$IP_REGEX,proxy|dhcp-range=$NETWORK_SUBNET,proxy|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+
+    # LISTEN_INTERFACE ayarı (opsiyonel)
+    if [ -n "${LISTEN_INTERFACE:-}" ]; then
+        sed -i -E "s|^#\s*interface=.*|interface=$LISTEN_INTERFACE|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+        sed -i -E "s|^#\s*bind-interfaces|bind-interfaces|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+    else
+        sed -i -E "s|^interface=.*|# interface=eth0|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+        sed -i -E "s|^bind-interfaces|# bind-interfaces|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+    fi
 fi
 
-# 2. boot.ipxe
-if [ -f "$PROJECT_DIR/http/boot.ipxe" ]; then
-    sed -i -E "s|set server-url\s+http://$IP_REGEX|set server-url   http://$PXE_SERVER_IP|g" "$PROJECT_DIR/http/boot.ipxe"
-fi
+# 2. http altındaki tüm .ipxe scriptleri
+while IFS= read -r ipxe_file; do
+    sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$ipxe_file"
+    sed -i -E "s|^(set nfs-server[[:space:]]+)$IP_REGEX|\1$PXE_SERVER_IP|g" "$ipxe_file"
+done < <(find "$PROJECT_DIR/http" -type f -name "*.ipxe")
 
 # 3. TFTP Yönlendirme betikleri (autoexec.ipxe vb.)
 for tftp_file in "$PROJECT_DIR/tftp/"*.ipxe*; do
