@@ -1,0 +1,10 @@
+# NFS Export - PXE Boot Sunucusu
+#
+# debian-live: Debian Live rootfs (salt okunur)
+# persistent:  Kalıcı sistem kök dizini (okuma-yazma)
+#
+# NOT: erichough/nfs-server standart NFS export formatı kullanır.
+# fsid değerleri her export için benzersiz olmalıdır.
+
+/nfs/debian-live  *(ro,sync,no_subtree_check,no_root_squash,fsid=1)
+/nfs/persistent   *(rw,sync,no_subtree_check,no_root_squash,fsid=2)

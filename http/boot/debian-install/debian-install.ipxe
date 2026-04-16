@@ -1,0 +1,31 @@
+#!ipxe
+# ============================================================
+#  Debian 12 — Net Install (Ağdan Kurulum)
+#
+#  Kernel + initrd yerel HTTP sunucusundan alınır.
+#  Debian paketleri kurulum sırasında internet mirror'ından
+#  indirilir (tam kurulum yapar, Live değil).
+#
+#  Hazırlık: ./scripts/extract-debian-install.sh
+# ============================================================
+
+set server-url http://10.30.1.20
+
+echo
+echo  ╔════════════════════════════════╗
+echo  ║   Debian 12 Net Install        ║
+echo  ║   Lutfen bekleyin...           ║
+echo  ╚════════════════════════════════╝
+echo
+
+kernel ${server-url}/boot/debian-install/vmlinuz \
+  auto=true \
+  priority=critical \
+  interface=auto \
+  vga=788 \
+  quiet
+
+initrd ${server-url}/boot/debian-install/initrd.gz
+
+echo Kernel ve initrd yuklendi. Baslatilyior...
+boot

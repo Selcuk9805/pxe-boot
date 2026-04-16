@@ -1,0 +1,44 @@
+# ISO dosyaları (büyük binary)
+isos/
+
+# Runtime indirilen iPXE binary'leri
+tftp/ipxe.efi
+tftp/undionly.kpxe
+tftp/*.pxe
+tftp/*.kpxe
+tftp/*.efi
+
+# wimboot binary
+http/wimboot
+
+# Çıkarılan boot dosyaları (ISO'lardan)
+http/boot/debian-install/vmlinuz
+http/boot/debian-install/initrd.gz
+http/boot/debian-live/vmlinuz
+http/boot/debian-live/initrd.img
+http/boot/debian-live/live/
+http/boot/debian-persistent/vmlinuz
+http/boot/debian-persistent/initrd.img
+http/boot/winpe/boot.wim
+http/boot/winpe/BCD
+http/boot/winpe/boot.sdi
+
+# NFS kök sistemi (debootstrap)
+nfs/persistent/base/
+nfs/debian-live/
+
+# Ortam değişkenleri
+.env
+
+# Docker build artifacts
+docker/dnsmasq/__pycache__/
+
+# Editor
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

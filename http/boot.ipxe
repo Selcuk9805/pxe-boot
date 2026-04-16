@@ -1,0 +1,95 @@
+#!ipxe
+# ============================================================
+#  PXE Boot Sunucusu — Ana Menü
+#  Sunucu: 10.30.1.20
+# ============================================================
+
+set server-url   http://10.30.1.20
+set menu-timeout 30000
+set menu-default local
+
+# ── ANSI Renk Değişkenleri ─────────────────────────────────
+# iPXE'de escape karakteri: set <isim>:hex <hex_değer>
+# ${<isim>:string} ile kullanılır.
+set esc:hex    1b
+set nl  ${esc:string}[0m         # sıfırla (reset)
+set bd  ${esc:string}[1m         # kalın (bold)
+set cy  ${esc:string}[1;36m      # koyu cyan
+set bl  ${esc:string}[1;34m      # koyu mavi
+set gr  ${esc:string}[1;32m      # koyu yeşil
+set ye  ${esc:string}[1;33m      # koyu sarı
+set wh  ${esc:string}[1;37m      # parlak beyaz
+set rd  ${esc:string}[1;31m      # koyu kırmızı
+set dim ${esc:string}[2;37m      # soluk gri
+
+# ── Ekranı Temizle + Banner Göster ─────────────────────────
+:banner
+echo ${esc:string}[2J${esc:string}[H
+echo
+echo ${wh}  ============================================================
+echo ${bd}${cy}           Selcuk9805 Network Boot System
+echo ${nl}${wh}  ============================================================
+echo ${dim}   Sunucu  : ${server-url}
+echo ${dim}   MAC     : ${net0/mac}      IP : ${net0/ip}
+echo ${wh}  ============================================================
+echo ${nl}
+
+# ── Ana Menü ────────────────────────────────────────────────
+:start
+menu  PXE Boot Sunucusu  [ ${net0/ip} ]
+item --gap --
+item --gap --   Linux
+item --gap --   ───────────────────────────────────────
+item debian-install   [1]  Debian 13  Kurulum    (Net Install)
+item debian-live      [2]  Debian 13  Live        (Gecici RAM)
+item debian-persist   [3]  Debian 13  Persistent  (NFS Kok)
+item --gap --
+item --gap --   Windows
+item --gap --   ───────────────────────────────────────
+item winpe            [4]  WinPE Ortami
+item --gap --
+item --gap --   Araclar
+item --gap --   ───────────────────────────────────────
+item shell            [S]  iPXE Shell  (Debug)
+item local            [L]  Yerel Diskten Basla
+item --gap --
+choose --timeout ${menu-timeout} --default ${menu-default} target
+goto ${target}
+
+# ── Seçim İşleyicileri ──────────────────────────────────────
+:debian-install
+echo ${gr}>> Debian 13 Kurulum yukleniyor...${nl}
+chain --autofree ${server-url}/boot/debian-install/debian-install.ipxe || goto failed
+goto banner
+
+:debian-live
+echo ${gr}>> Debian 13 Live yukleniyor (squashfs HTTP fetch)...${nl}
+chain --autofree ${server-url}/boot/debian-live/debian-live.ipxe || goto failed
+goto banner
+
+:debian-persist
+echo ${gr}>> Debian 13 Persistent (NFS root) yukleniyor...${nl}
+chain --autofree ${server-url}/boot/debian-persistent/debian-persistent.ipxe || goto failed
+goto banner
+
+:winpe
+echo ${gr}>> WinPE yukleniyor...${nl}
+chain --autofree ${server-url}/boot/winpe/winpe.ipxe || goto failed
+goto banner
+
+:shell
+echo ${ye}iPXE Shell - cikis icin "exit" yazin${nl}
+shell
+goto banner
+
+:local
+echo ${cy}>> Yerel diskten baslatiliyor...${nl}
+exit 0
+
+:failed
+echo
+echo ${rd}  [!] HATA: Boot dosyasi yuklenemedi.${nl}
+echo ${ye}      Sunucu erisimini kontrol edin: ${server-url}${nl}
+echo
+sleep 5
+goto banner

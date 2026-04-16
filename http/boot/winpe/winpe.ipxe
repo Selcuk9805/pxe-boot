@@ -1,0 +1,41 @@
+#!ipxe
+# ============================================================
+#  WinPE — Windows Preinstallation Environment
+#
+#  wimboot kullanılarak HTTP üzerinden yüklenir.
+#
+#  Gerekli dosyalar (Windows ADK ile hazırlanır):
+#    http/boot/winpe/boot.sdi    (Windows boot sektörü)
+#    http/boot/winpe/BCD         (Boot Configuration Data)
+#    http/boot/winpe/boot.wim    (WinPE imajı)
+#    http/wimboot                (setup.sh tarafından indirilir)
+#
+#  Hazırlık: ./scripts/extract-winpe.sh <winpe.iso>
+#
+#  UYARI: WinPE ISO mevcut değilse bu menü çalışmaz.
+#         winpe.iso'su olmadan bu seçenek devre dışıdır.
+# ============================================================
+
+set server-url http://10.30.1.20
+
+echo
+echo  ╔════════════════════════════════╗
+echo  ║   WinPE Ortami                 ║
+echo  ║   wimboot yukleniyor...        ║
+echo  ╚════════════════════════════════╝
+echo
+
+# wimboot: Windows boot dosyalarını HTTP üzerinden yükler
+kernel ${server-url}/wimboot
+
+# boot.sdi: Windows boot sektör imajı
+initrd ${server-url}/boot/winpe/boot.sdi      boot.sdi
+
+# BCD: Boot Configuration Data
+initrd ${server-url}/boot/winpe/BCD           BCD
+
+# boot.wim: WinPE çekirdeği
+initrd ${server-url}/boot/winpe/boot.wim      boot.wim
+
+echo WinPE baslatiliyor...
+boot
