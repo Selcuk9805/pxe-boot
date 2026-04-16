@@ -22,21 +22,15 @@ set wh  ${esc:string}[1;37m      # parlak beyaz
 set rd  ${esc:string}[1;31m      # koyu kırmızı
 set dim ${esc:string}[2;37m      # soluk gri
 
-# ── Ekranı Temizle + Banner Göster ─────────────────────────
+# ── Ekranı Temizle ───────────────────────────────────────────
 :banner
 echo ${esc:string}[2J${esc:string}[H
-echo
-echo ${wh}  ============================================================
-echo ${bd}${cy}           Selcuk9805 Network Boot System
-echo ${nl}${wh}  ============================================================
-echo ${dim}   Sunucu  : ${server-url}
-echo ${dim}   MAC     : ${net0/mac}      IP : ${net0/ip}
-echo ${wh}  ============================================================
-echo ${nl}
 
 # ── Ana Menü ────────────────────────────────────────────────
 :start
-menu  PXE Boot Sunucusu  [ ${net0/ip} ]
+menu ══════════════ Selcuk9805 Network Boot System ══════════════
+item --gap --   Sunucu : ${server-url}
+item --gap --   Istemci: IP: ${net0/ip}   MAC: ${net0/mac}
 item --gap --
 item --gap --   Linux
 item --gap --   ───────────────────────────────────────
