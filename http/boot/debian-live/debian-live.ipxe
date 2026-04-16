@@ -1,6 +1,6 @@
 #!ipxe
 # ============================================================
-#  Debian 12 — Live (Geçici Oturum)
+#  Debian 13 — Live XFCE (Geçici Oturum)
 #
 #  squashfs HTTP üzerinden fetch edilir (TFTP kullanılmaz).
 #  Tüm değişiklikler RAM'de tutulur, kapanınca kaybolur.
@@ -12,7 +12,7 @@ set server-url http://10.30.1.20
 
 echo
 echo  +--------------------------------+
-echo  |   Debian 12 Live               |
+echo  |   Debian 13 Live XFCE          |
 echo  |   squashfs yukleniyor...       |
 echo  +--------------------------------+
 echo

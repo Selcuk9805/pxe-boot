@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # ============================================================
-#  Debian 12 Live — İçerik Hazırlama Scripti
+#  Debian 13 Live XFCE — İçerik Hazırlama Scripti
 #
 #  Kullanım: ./scripts/extract-debian-live.sh <live.iso>
 #
 #  Örnek:
-#    ./scripts/extract-debian-live.sh isos/debian-live-12-amd64-gnome.iso
+#    ./scripts/extract-debian-live.sh isos/debian-live-13.4.0-amd64-xfce.iso
 #
 #  Çıktı:
 #    http/boot/debian-live/vmlinuz
@@ -39,7 +39,7 @@ if [ "${1:-}" == "" ]; then
     echo "Kullanım: $0 <debian-live.iso>"
     echo ""
     echo "Örnek:"
-    echo "  $0 isos/debian-live-12-amd64-gnome.iso"
+    echo "  $0 isos/debian-live-13.4.0-amd64-xfce.iso"
     echo ""
     echo "ISO'yu şuradan indirin:"
     echo "  https://www.debian.org/CD/live/"

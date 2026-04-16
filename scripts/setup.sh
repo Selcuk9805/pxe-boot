@@ -263,10 +263,10 @@ prepare_docker() {
 
 # ── Debian Live XFCE Hazırlığı (Opsiyonel) ──────────────────
 prepare_live_xfce() {
-    step "Debian 12 Live XFCE otomatik hazırlık"
+    step "Debian 13 Live XFCE otomatik hazırlık"
 
     local live_iso_dir="$PROJECT_DIR/isos"
-    local live_iso_path="$live_iso_dir/debian-live-12-amd64-xfce.iso"
+    local live_iso_path="$live_iso_dir/debian-live-13.4.0-amd64-xfce.iso"
     local live_url_base="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid"
 
     mkdir -p "$live_iso_dir"
@@ -279,12 +279,12 @@ prepare_live_xfce() {
     fi
 
     if [ ! -f "$live_iso_path" ]; then
-        info "Debian Live XFCE ISO bulunamadı, indiriliyor..."
+        info "Debian 13 Live XFCE ISO bulunamadı, indiriliyor..."
 
         local index_html iso_name live_url
         index_html=$(curl -fsSL "$live_url_base/" 2>/dev/null || true)
         iso_name=$(echo "$index_html" \
-            | grep -oE 'debian-live-12(\.[0-9]+)*-amd64-xfce\.iso' \
+            | grep -oE 'debian-live-13(\.[0-9]+)*-amd64-xfce\.iso' \
             | sort -V | tail -1 || true)
 
         if [ -z "$iso_name" ]; then
@@ -294,7 +294,7 @@ prepare_live_xfce() {
         local downloaded=0
         local candidates=()
         [ -n "$iso_name" ] && candidates+=("$iso_name")
-        candidates+=("debian-live-12-amd64-xfce.iso" "debian-live-amd64-xfce.iso")
+        candidates+=("debian-live-13.4.0-amd64-xfce.iso" "debian-live-13-amd64-xfce.iso" "debian-live-amd64-xfce.iso")
 
         for candidate in "${candidates[@]}"; do
             live_url="$live_url_base/$candidate"
@@ -306,7 +306,7 @@ prepare_live_xfce() {
         done
 
         if [ "$downloaded" -ne 1 ]; then
-            warn "Debian Live XFCE ISO otomatik indirilemedi."
+            warn "Debian 13 Live XFCE ISO otomatik indirilemedi."
             warn "Manuel indirin ve tekrar deneyin:"
             warn "  https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
             warn "  -> $live_iso_dir/ altina bir *.iso kopyalayin"
@@ -328,8 +328,10 @@ prepare_persistent_xfce() {
     step "Debian 12 Persistent XFCE otomatik hazırlık"
 
     info "Bu adım root gerektirir; sudo istenebilir."
-    sudo PERSISTENT_PROFILE=xfce NONINTERACTIVE=1 \
-        bash "$PROJECT_DIR/scripts/setup-persistent.sh"
+    if ! sudo PERSISTENT_PROFILE=xfce NONINTERACTIVE=1 \
+        bash "$PROJECT_DIR/scripts/setup-persistent.sh"; then
+        return 1
+    fi
 
     log "Debian Persistent XFCE hazır."
 }
@@ -338,10 +340,10 @@ prepare_persistent_xfce() {
 optional_content_wizard() {
     step "Opsiyonel içerik sihirbazı"
 
-    if ask_yes_no "Debian 12 Live XFCE dosyalari indirilsin ve hazirlansin mi?" 1; then
-        prepare_live_xfce || warn "Debian Live XFCE hazırlığı başarısız, setup devam ediyor."
+    if ask_yes_no "Debian 13 Live XFCE dosyalari indirilsin ve hazirlansin mi?" 1; then
+        prepare_live_xfce || warn "Debian 13 Live XFCE hazırlığı başarısız, setup devam ediyor."
     else
-        info "Debian Live XFCE atlandı."
+        info "Debian 13 Live XFCE atlandı."
     fi
 
     if ask_yes_no "Debian 12 Persistent XFCE (NFS root) kurulsun mu?" 1; then

@@ -7,7 +7,7 @@ Docker tabanlı PXE ortamı (DHCP Proxy + TFTP + HTTP + NFS).
 | # | Mod | Açıklama |
 |---|-----|----------|
 | 1 | Debian 12 Kurulum | Netinstall (kernel/initrd HTTP) |
-| 2 | Debian 12 Live | Geçici oturum (squashfs HTTP fetch) |
+| 2 | Debian 13 Live XFCE | Geçici oturum (squashfs HTTP fetch) |
 | 3 | Debian 12 Persistent | NFS root (kalıcı) |
 | 4 | WinPE | wimboot + WIM |
 
@@ -26,7 +26,7 @@ make start     # Sadece konteynerleri başlatır
 ```
 
 `make setup` sırasında 2 soru gelir:
-- Debian 12 Live XFCE ISO indirilsin ve çıkarılsın mı?
+- Debian 13 Live XFCE ISO indirilsin ve çıkarılsın mı?
 - Debian 12 Persistent XFCE (NFS root) kurulsun mu?
 
 Kullanıcı `E` derse kurulum otomatik ilerler.
@@ -67,7 +67,7 @@ make extract-install
 ### Debian Live (opsiyonel)
 
 ```bash
-make extract-live ISO=isos/debian-live-12-amd64-xfce.iso
+make extract-live ISO=isos/debian-live-13.4.0-amd64-xfce.iso
 ```
 
 ### Debian Persistent (opsiyonel)

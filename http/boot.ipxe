@@ -35,7 +35,7 @@ item --gap --
 item --gap --   Linux
 item --gap --   ---------------------------------------
 item debian-install   [1]  Debian 12  Kurulum    (Net Install)
-item debian-live      [2]  Debian 12  XFCE Live        (Gecici RAM)
+item debian-live      [2]  Debian 13  XFCE Live        (Gecici RAM)
 item debian-persist   [3]  Debian 12  XFCE Persistent  (NFS Kok)
 item --gap --
 item --gap --   Windows
@@ -57,7 +57,7 @@ chain --autofree ${server-url}/boot/debian-install/debian-install.ipxe || goto f
 goto banner
 
 :debian-live
-echo ${gr}>> Debian 12 Live yukleniyor (squashfs HTTP fetch)...${nl}
+echo ${gr}>> Debian 13 Live yukleniyor (squashfs HTTP fetch)...${nl}
 chain --autofree ${server-url}/boot/debian-live/debian-live.ipxe || goto failed-live
 goto banner
 
