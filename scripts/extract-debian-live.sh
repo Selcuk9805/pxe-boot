@@ -22,6 +22,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 OUTPUT_DIR="$PROJECT_DIR/http/boot/debian-live"
 
+if [ -f "$PROJECT_DIR/.env" ]; then
+    source "$PROJECT_DIR/.env"
+else
+    PXE_SERVER_IP="10.30.1.20"
+fi
+
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()   { echo -e "${GREEN}[✓]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $*"; }
@@ -175,9 +181,9 @@ if [ -f "$OUTPUT_DIR/vmlinuz" ] && \
     info "  filesystem.squashfs → $(du -sh "$OUTPUT_DIR/live/filesystem.squashfs" | cut -f1)"
     echo ""
     log "Boot URL'leri:"
-    info "  Kernel  : http://10.30.1.20/boot/debian-live/vmlinuz"
-    info "  Initrd  : http://10.30.1.20/boot/debian-live/initrd.img"
-    info "  Squashfs: http://10.30.1.20/boot/debian-live/live/filesystem.squashfs"
+    info "  Kernel  : http://${PXE_SERVER_IP}/boot/debian-live/vmlinuz"
+    info "  Initrd  : http://${PXE_SERVER_IP}/boot/debian-live/initrd.img"
+    info "  Squashfs: http://${PXE_SERVER_IP}/boot/debian-live/live/filesystem.squashfs"
 else
     error "Bazı dosyalar eksik! ISO geçerli bir Debian Live ISO mu?"
     ls -la "$OUTPUT_DIR/" "$OUTPUT_DIR/live/" 2>/dev/null || true

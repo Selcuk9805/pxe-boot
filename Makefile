@@ -1,5 +1,5 @@
 .PHONY: setup start stop restart status logs clean help \
-        logs-dhcp logs-http logs-nfs \
+        logs-dhcp logs-http logs-nfs apply-env \
         extract-install extract-live setup-persistent extract-winpe
 
 # ─── Yardım ───────────────────────────────────────────────────
@@ -8,6 +8,7 @@ help:
 	@echo "  PXE Boot Sunucusu — Make Komutları"
 	@echo "  ─────────────────────────────────────────────────"
 	@echo "  make setup              İlk kurulum (iPXE + wimboot indir)"
+	@echo "  make apply-env          IP adresini senkronize et (.env dosyasına göre)"
 	@echo "  make start              Tüm konteynerleri başlat"
 	@echo "  make stop               Tüm konteynerleri durdur"
 	@echo "  make restart            Yeniden başlat"
@@ -25,9 +26,12 @@ help:
 	@echo "  make clean              Konteynerleri sil (veri korunur)"
 	@echo ""
 
-# ─── Kurulum ──────────────────────────────────────────────────
+# ─── Kurulum & Yapılandırma ──────────────────────────────────
 setup:
 	@bash scripts/setup.sh
+
+apply-env:
+	@bash scripts/apply-env.sh
 
 # ─── Konteyner Yönetimi ───────────────────────────────────────
 start:

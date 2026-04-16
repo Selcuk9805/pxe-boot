@@ -27,7 +27,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 NFS_BASE="$PROJECT_DIR/nfs/persistent/base"
 BOOT_OUTPUT="$PROJECT_DIR/http/boot/debian-persistent"
-PXE_SERVER_IP="10.30.1.20"
+
+if [ -f "$PROJECT_DIR/.env" ]; then
+    source "$PROJECT_DIR/.env"
+else
+    PXE_SERVER_IP="10.30.1.20"
+fi
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'
 BOLD='\033[1m'; NC='\033[0m'

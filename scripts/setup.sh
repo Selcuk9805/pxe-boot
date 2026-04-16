@@ -216,6 +216,12 @@ set_permissions() {
     log "İzinler ayarlandı."
 }
 
+# ── IP/Subnet Güncellemesi ───────────────────────────────────
+apply_env() {
+    step "Ortam değişkenleri (.env) projedeki IP'lere uygulanıyor..."
+    bash "$PROJECT_DIR/scripts/apply-env.sh"
+}
+
 # ── Docker Image'ları ─────────────────────────────────────────
 prepare_docker() {
     step "Docker image'ları hazırlanıyor..."
@@ -269,6 +275,7 @@ main() {
     download_ipxe
     download_wimboot
     set_permissions
+    apply_env
     prepare_docker
     print_next_steps
 }

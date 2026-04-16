@@ -18,6 +18,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 OUTPUT_DIR="$PROJECT_DIR/http/boot/debian-install"
 
+if [ -f "$PROJECT_DIR/.env" ]; then
+    source "$PROJECT_DIR/.env"
+else
+    PXE_SERVER_IP="10.30.1.20"
+fi
+
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}[✓]${NC} $*"; }
 warn() { echo -e "${YELLOW}[!]${NC} $*"; }
@@ -90,8 +96,8 @@ print_summary() {
     info "  initrd.gz → $(du -sh "$OUTPUT_DIR/initrd.gz" | cut -f1)"
     echo ""
     log "Boot URL'leri:"
-    info "  Kernel : http://10.30.1.20/boot/debian-install/vmlinuz"
-    info "  Initrd : http://10.30.1.20/boot/debian-install/initrd.gz"
+    info "  Kernel : http://${PXE_SERVER_IP}/boot/debian-install/vmlinuz"
+    info "  Initrd : http://${PXE_SERVER_IP}/boot/debian-install/initrd.gz"
 }
 
 # ── Ana Akış ─────────────────────────────────────────────────
