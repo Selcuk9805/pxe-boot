@@ -29,39 +29,26 @@ fi
 
 echo -e "\n${CYAN}▶ Ortam değişkenleri uygulanıyor (IP: $PXE_SERVER_IP, Subnet: $NETWORK_SUBNET)...${NC}"
 
-# Mevcut IP ve Subnet değerlerini boot.ipxe ve dnsmasq.conf içinden arıyoruz
-CURRENT_IP=$(grep -m1 -oP 'set server-url\s+http://\K[0-9]+(\.[0-9]+){3}' "$PROJECT_DIR/http/boot.ipxe" 2>/dev/null || true)
-CURRENT_SUBNET=$(grep -m1 -oP '^dhcp-range=\K[0-9]+(\.[0-9]+){3}(?=,proxy$)' "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf" 2>/dev/null || true)
+# Regex ifadeleriyle genel tarama yap (Eski IP'nin ne olduğundan bağımsız olarak, yerini PXE_SERVER_IP alacak)
+IP_REGEX="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
 
-# Eğer bulunamazsa fallback olarak hardcoded değerleri kullanalım
-if [ -z "$CURRENT_IP" ]; then
-    CURRENT_IP="10.30.1.20"
-fi
-if [ -z "$CURRENT_SUBNET" ]; then
-    CURRENT_SUBNET="10.30.1.0"
+echo -e "${YELLOW}[!] IP adresleri güncelleniyor: -> $PXE_SERVER_IP${NC}"
+# 1. dnsmasq.conf
+if [ -f "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf" ]; then
+    sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+    sed -i -E "s|^dhcp-range=$IP_REGEX,proxy|dhcp-range=$NETWORK_SUBNET,proxy|" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
 fi
 
-# 1. IP Güncelleme
-if [ "$CURRENT_IP" != "$PXE_SERVER_IP" ]; then
-    echo -e "${YELLOW}[!] IP adresi güncelleniyor: $CURRENT_IP -> $PXE_SERVER_IP${NC}"
-    # find ile .ipxe, .ipxe.0, .conf, .md ve Makefile dosyalarını bul ve değiştir
-    find "$PROJECT_DIR" -type f \( -name "*.ipxe" -o -name "*.ipxe.0" -o -name "dnsmasq.conf" -o -name "*.md" -o -name "Makefile" \) -exec sed -i "s/$CURRENT_IP/$PXE_SERVER_IP/g" {} +
-else
-    echo -e "${GREEN}[✓] IP adresi zaten güncel: $PXE_SERVER_IP${NC}"
+# 2. boot.ipxe
+if [ -f "$PROJECT_DIR/http/boot.ipxe" ]; then
+    sed -i -E "s|set server-url\s+http://$IP_REGEX|set server-url   http://$PXE_SERVER_IP|g" "$PROJECT_DIR/http/boot.ipxe"
 fi
 
-# 2. Subnet Güncelleme
-if [ "$CURRENT_SUBNET" != "$NETWORK_SUBNET" ]; then
-    echo -e "${YELLOW}[!] Subnet adresi güncelleniyor: $CURRENT_SUBNET -> $NETWORK_SUBNET${NC}"
-    # Sadece dnsmasq.conf ve NETWORK_SETUP_NOTES.md içinde subnet geçer
-    if [ -f "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf" ]; then
-        sed -i "s/$CURRENT_SUBNET/$NETWORK_SUBNET/g" "$PROJECT_DIR/config/dnsmasq/dnsmasq.conf"
+# 3. TFTP Yönlendirme betikleri (autoexec.ipxe vb.)
+for tftp_file in "$PROJECT_DIR/tftp/"*.ipxe*; do
+    if [ -f "$tftp_file" ]; then
+         sed -i -E "s|chain http://$IP_REGEX|chain http://$PXE_SERVER_IP|g" "$tftp_file"
     fi
-    if [ -f "$PROJECT_DIR/NETWORK_SETUP_NOTES.md" ]; then
-        sed -i "s/$CURRENT_SUBNET/$NETWORK_SUBNET/g" "$PROJECT_DIR/NETWORK_SETUP_NOTES.md"
-    fi
-else
-    echo -e "${GREEN}[✓] Subnet adresi zaten güncel: $NETWORK_SUBNET${NC}"
-fi
+done
 
 echo -e "${GREEN}[✓] İşlem tamamlandı.${NC}\n"
