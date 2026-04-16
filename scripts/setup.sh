@@ -271,6 +271,13 @@ prepare_live_xfce() {
 
     mkdir -p "$live_iso_dir"
 
+    # Eğer kullanıcı farklı isimle ISO koyduysa onu kullan
+    local existing_iso
+    existing_iso=$(find "$live_iso_dir" -maxdepth 1 -type f -name 'debian-live*amd64*xfce*.iso' | sort -V | tail -1 || true)
+    if [ -n "$existing_iso" ]; then
+        live_iso_path="$existing_iso"
+    fi
+
     if [ ! -f "$live_iso_path" ]; then
         info "Debian Live XFCE ISO bulunamadı, indiriliyor..."
 
@@ -278,16 +285,34 @@ prepare_live_xfce() {
         index_html=$(curl -fsSL "$live_url_base/" 2>/dev/null || true)
         iso_name=$(echo "$index_html" \
             | grep -oE 'debian-live-12(\.[0-9]+)*-amd64-xfce\.iso' \
-            | sort -V | tail -1)
+            | sort -V | tail -1 || true)
 
         if [ -z "$iso_name" ]; then
-            warn "Sürüm bazlı dosya adı bulunamadı, sabit ada düşülüyor..."
-            iso_name="debian-live-amd64-xfce.iso"
+            warn "Sürüm bazlı dosya adı bulunamadı, alternatif adlar denenecek..."
         fi
 
-        live_url="$live_url_base/$iso_name"
-        info "Kaynak: $live_url"
-        wget -q --show-progress "$live_url" -O "$live_iso_path"
+        local downloaded=0
+        local candidates=()
+        [ -n "$iso_name" ] && candidates+=("$iso_name")
+        candidates+=("debian-live-12-amd64-xfce.iso" "debian-live-amd64-xfce.iso")
+
+        for candidate in "${candidates[@]}"; do
+            live_url="$live_url_base/$candidate"
+            info "Deneniyor: $live_url"
+            if wget -q --show-progress "$live_url" -O "$live_iso_path"; then
+                downloaded=1
+                break
+            fi
+        done
+
+        if [ "$downloaded" -ne 1 ]; then
+            warn "Debian Live XFCE ISO otomatik indirilemedi."
+            warn "Manuel indirin ve tekrar deneyin:"
+            warn "  https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
+            warn "  -> $live_iso_dir/ altina bir *.iso kopyalayin"
+            return 1
+        fi
+
         log "ISO indirildi: $live_iso_path ($(du -sh "$live_iso_path" | cut -f1))"
     else
         warn "ISO mevcut, indirme atlandı: $live_iso_path"
@@ -314,13 +339,13 @@ optional_content_wizard() {
     step "Opsiyonel içerik sihirbazı"
 
     if ask_yes_no "Debian 12 Live XFCE dosyalari indirilsin ve hazirlansin mi?" 1; then
-        prepare_live_xfce
+        prepare_live_xfce || warn "Debian Live XFCE hazırlığı başarısız, setup devam ediyor."
     else
         info "Debian Live XFCE atlandı."
     fi
 
     if ask_yes_no "Debian 12 Persistent XFCE (NFS root) kurulsun mu?" 1; then
-        prepare_persistent_xfce
+        prepare_persistent_xfce || warn "Debian Persistent XFCE hazırlığı başarısız, setup devam ediyor."
     else
         info "Debian Persistent XFCE atlandı."
     fi
