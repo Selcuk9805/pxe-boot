@@ -328,6 +328,22 @@ prepare_persistent_xfce() {
     step "Debian 12 Persistent XFCE otomatik hazırlık"
 
     info "Bu adım root gerektirir; sudo istenebilir."
+
+    if ! command -v debootstrap &>/dev/null; then
+        warn "debootstrap bulunamadi, otomatik kuruluyor..."
+        if [ "$(id -u)" -eq 0 ]; then
+            apt-get update && apt-get install -y debootstrap
+        else
+            sudo apt-get update && sudo apt-get install -y debootstrap
+        fi
+    fi
+
+    if ! command -v debootstrap &>/dev/null; then
+        error "debootstrap kurulumu basarisiz."
+        error "  sudo apt install debootstrap"
+        return 1
+    fi
+
     if ! sudo PERSISTENT_PROFILE=xfce NONINTERACTIVE=1 \
         bash "$PROJECT_DIR/scripts/setup-persistent.sh"; then
         return 1
@@ -362,16 +378,16 @@ print_next_steps() {
     echo ""
     echo -e "${BOLD}Sonraki Adımlar:${NC}"
     echo ""
-    echo -e "  ${CYAN}1.${NC} ISO'ları isos/ dizinine kopyalayın"
+    echo -e "  ${CYAN}1.${NC} Durumu kontrol edin:"
+    echo "       make doctor"
     echo ""
-    echo -e "  ${CYAN}2.${NC} İçerikleri çıkarın:"
-    echo "       ./scripts/extract-debian-install.sh"
-    echo "       ./scripts/extract-debian-live.sh  isos/debian-live-*.iso"
-    echo "       ./scripts/setup-persistent.sh     (uzun sürer!)"
+    echo -e "  ${CYAN}2.${NC} Eksik içerikleri tamamlayın (gerekirse):"
+    echo "       make prepare"
+    echo "       make extract-live ISO=isos/debian-live-13.4.0-amd64-xfce.iso"
+    echo "       sudo make setup-persistent"
     echo ""
     echo -e "  ${CYAN}3.${NC} Sunucuyu başlatın:"
     echo "       make start"
-    echo "       (veya: docker compose up -d)"
     echo ""
     echo -e "  ${CYAN}4.${NC} Logları izleyin:"
     echo "       make logs"
