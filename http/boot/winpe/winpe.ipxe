@@ -19,10 +19,10 @@
 set server-url http://10.30.1.20
 
 echo
-echo  ╔════════════════════════════════╗
-echo  ║   WinPE Ortami                 ║
-echo  ║   wimboot yukleniyor...        ║
-echo  ╚════════════════════════════════╝
+echo  +--------------------------------+
+echo  |   WinPE Ortami                 |
+echo  |   wimboot yukleniyor...        |
+echo  +--------------------------------+
 echo
 
 # wimboot: Windows boot dosyalarını HTTP üzerinden yükler

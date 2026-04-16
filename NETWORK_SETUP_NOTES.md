@@ -160,11 +160,11 @@ make logs-dhcp
 sudo tcpdump -i any -n port 69
 
 # 3) UEFI istemci için sunulan dosya adı ne?
-# Beklenen: snponly.efi (veya fallback olarak ipxe.efi)
+# Beklenen: ipxe.efi
 ```
 
 Ek notlar:
-- Projede UEFI için varsayılan ilk aşama dosya `snponly.efi` olarak ayarlanmıştır.
+- Projede UEFI için varsayılan ilk aşama dosya `ipxe.efi` olarak ayarlanmıştır.
 - `tftp-no-blocksize` açık tutulur; sorunlu firmware'lerde kritik fark yaratır.
 - Secure Boot aktifse, test için geçici olarak kapatıp tekrar deneyin.
 

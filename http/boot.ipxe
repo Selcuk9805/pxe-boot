@@ -28,22 +28,22 @@ echo ${esc:string}[2J${esc:string}[H
 
 # ── Ana Menü ────────────────────────────────────────────────
 :start
-menu ══════════════ Selcuk9805 Network Boot System ══════════════
+menu -------------- Selcuk9805 Network Boot System --------------
 item --gap --   Sunucu : ${server-url}
 item --gap --   Istemci: IP: ${net0/ip}   MAC: ${net0/mac}
 item --gap --
 item --gap --   Linux
-item --gap --   ───────────────────────────────────────
+item --gap --   ---------------------------------------
 item debian-install   [1]  Debian 12  Kurulum    (Net Install)
 item debian-live      [2]  Debian 12  Live        (Gecici RAM)
 item debian-persist   [3]  Debian 12  Persistent  (NFS Kok)
 item --gap --
 item --gap --   Windows
-item --gap --   ───────────────────────────────────────
+item --gap --   ---------------------------------------
 item winpe            [4]  WinPE Ortami
 item --gap --
 item --gap --   Araclar
-item --gap --   ───────────────────────────────────────
+item --gap --   ---------------------------------------
 item shell            [S]  iPXE Shell  (Debug)
 item local            [L]  Yerel Diskten Basla
 item --gap --
