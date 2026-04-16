@@ -35,8 +35,8 @@ item --gap --
 item --gap --   Linux
 item --gap --   ---------------------------------------
 item debian-install   [1]  Debian 12  Kurulum    (Net Install)
-item debian-live      [2]  Debian 12  Live        (Gecici RAM)
-item debian-persist   [3]  Debian 12  Persistent  (NFS Kok)
+item debian-live      [2]  Debian 12  XFCE Live        (Gecici RAM)
+item debian-persist   [3]  Debian 12  XFCE Persistent  (NFS Kok)
 item --gap --
 item --gap --   Windows
 item --gap --   ---------------------------------------

@@ -12,7 +12,7 @@ help:
 	@echo ""
 	@echo "  PXE Boot Sunucusu — Make Komutları"
 	@echo "  ─────────────────────────────────────────────────"
-	@echo "  make setup              İlk kurulum + temel içerik hazırlığı"
+	@echo "  make setup              İlk kurulum + opsiyonel Live/Persistent XFCE sihirbazi"
 	@echo "  make prepare            Debian install içerik kontrol/hazırlık"
 	@echo "  make doctor             Eksik dosya ve içerik ön-kontrol"
 	@echo "  make apply-env          IP adresini senkronize et (.env dosyasına göre)"

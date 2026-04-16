@@ -25,6 +25,12 @@ make doctor    # Eksik dosya/konfig kontrolü
 make start     # Sadece konteynerleri başlatır
 ```
 
+`make setup` sırasında 2 soru gelir:
+- Debian 12 Live XFCE ISO indirilsin ve çıkarılsın mı?
+- Debian 12 Persistent XFCE (NFS root) kurulsun mu?
+
+Kullanıcı `E` derse kurulum otomatik ilerler.
+
 Log takibi:
 
 ```bash
@@ -39,6 +45,7 @@ make logs-http
 - `make setup`:
     - script kurulumunu yapar
     - `make prepare` çağırır
+    - opsiyonel olarak Live XFCE ve Persistent XFCE kurulumunu sorar
 - `make prepare`:
     - eksikse Debian install dosyalarını hazırlar (`vmlinuz`, `initrd.gz`)
     - Live/Persistent/WinPE için eksik içerikleri bilgilendirir
@@ -60,13 +67,16 @@ make extract-install
 ### Debian Live (opsiyonel)
 
 ```bash
-make extract-live ISO=isos/debian-live-12-amd64-gnome.iso
+make extract-live ISO=isos/debian-live-12-amd64-xfce.iso
 ```
 
 ### Debian Persistent (opsiyonel)
 
 ```bash
 sudo make setup-persistent
+
+# XFCE profili ile (grafik masaüstü)
+sudo PERSISTENT_PROFILE=xfce bash scripts/setup-persistent.sh
 ```
 
 ### WinPE (opsiyonel)

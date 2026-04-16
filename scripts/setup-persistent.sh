@@ -27,6 +27,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 NFS_BASE="$PROJECT_DIR/nfs/persistent/base"
 BOOT_OUTPUT="$PROJECT_DIR/http/boot/debian-persistent"
+PERSISTENT_PROFILE="${PERSISTENT_PROFILE:-minimal}"
+NONINTERACTIVE="${NONINTERACTIVE:-0}"
 
 if [ -f "$PROJECT_DIR/.env" ]; then
     source "$PROJECT_DIR/.env"
@@ -62,8 +64,12 @@ echo "HTTP hedef: $BOOT_OUTPUT"
 echo ""
 warn "Bu işlem 10-25 dakika sürebilir ve ~500MB-1.5GB alan kaplar."
 echo ""
-read -rp "Devam etmek istiyor musunuz? [E/h] " confirm
-[[ "$confirm" =~ ^[Hh] ]] && { echo "İptal edildi."; exit 0; }
+if [ "$NONINTERACTIVE" != "1" ]; then
+    read -rp "Devam etmek istiyor musunuz? [E/h] " confirm
+    [[ "$confirm" =~ ^[Hh] ]] && { echo "İptal edildi."; exit 0; }
+else
+    info "NONINTERACTIVE=1: Onay adımı otomatik geçildi."
+fi
 
 # ── Debootstrap ──────────────────────────────────────────────
 step "Debian Bookworm debootstrap başlatılıyor..."
@@ -75,9 +81,18 @@ if [ -f "$NFS_BASE/etc/debian_version" ]; then
     warn "Yeniden kurmak için: sudo rm -rf $NFS_BASE && $0"
 else
     info "debootstrap çalıştırılıyor (minimal Debian)..."
+
+    BASE_INCLUDE="linux-image-amd64,nfs-common,systemd-sysv,udev,net-tools,iproute2,openssh-server"
+    if [ "$PERSISTENT_PROFILE" = "xfce" ]; then
+        info "Profil: xfce (grafik masaüstü paketleri eklenecek)"
+        BASE_INCLUDE="$BASE_INCLUDE,xfce4,xfce4-goodies,lightdm,xorg,dbus-x11,network-manager,sudo"
+    else
+        info "Profil: minimal"
+    fi
+
     debootstrap \
         --arch=amd64 \
-        --include=linux-image-amd64,nfs-common,systemd-sysv,udev,net-tools,iproute2,openssh-server \
+        --include="$BASE_INCLUDE" \
         bookworm \
         "$NFS_BASE" \
         https://deb.debian.org/debian
@@ -123,6 +138,12 @@ warn "ÜNEMLİ: root şifresi 'pxeboot' olarak ayarlandı. Değiştirin!"
 # ── SSH Yapılandırması ───────────────────────────────────────
 # PermitRootLogin (lab ortamı için)
 sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' "$NFS_BASE/etc/ssh/sshd_config" 2>/dev/null || true
+
+# XFCE profili için varsayılan hedef: graphical
+if [ "$PERSISTENT_PROFILE" = "xfce" ]; then
+    mkdir -p "$NFS_BASE/etc/systemd/system"
+    ln -sf /lib/systemd/system/graphical.target "$NFS_BASE/etc/systemd/system/default.target"
+fi
 
 # ── Kernel + initrd Kopyalama ────────────────────────────────
 step "Kernel ve initrd HTTP sunucusuna kopyalanıyor..."
