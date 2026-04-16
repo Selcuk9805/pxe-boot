@@ -34,9 +34,9 @@ item --gap --   Istemci: IP: ${net0/ip}   MAC: ${net0/mac}
 item --gap --
 item --gap --   Linux
 item --gap --   ───────────────────────────────────────
-item debian-install   [1]  Debian 13  Kurulum    (Net Install)
-item debian-live      [2]  Debian 13  Live        (Gecici RAM)
-item debian-persist   [3]  Debian 13  Persistent  (NFS Kok)
+item debian-install   [1]  Debian 12  Kurulum    (Net Install)
+item debian-live      [2]  Debian 12  Live        (Gecici RAM)
+item debian-persist   [3]  Debian 12  Persistent  (NFS Kok)
 item --gap --
 item --gap --   Windows
 item --gap --   ───────────────────────────────────────
@@ -52,17 +52,17 @@ goto ${target}
 
 # ── Seçim İşleyicileri ──────────────────────────────────────
 :debian-install
-echo ${gr}>> Debian 13 Kurulum yukleniyor...${nl}
+echo ${gr}>> Debian 12 Kurulum yukleniyor...${nl}
 chain --autofree ${server-url}/boot/debian-install/debian-install.ipxe || goto failed
 goto banner
 
 :debian-live
-echo ${gr}>> Debian 13 Live yukleniyor (squashfs HTTP fetch)...${nl}
+echo ${gr}>> Debian 12 Live yukleniyor (squashfs HTTP fetch)...${nl}
 chain --autofree ${server-url}/boot/debian-live/debian-live.ipxe || goto failed
 goto banner
 
 :debian-persist
-echo ${gr}>> Debian 13 Persistent (NFS root) yukleniyor...${nl}
+echo ${gr}>> Debian 12 Persistent (NFS root) yukleniyor...${nl}
 chain --autofree ${server-url}/boot/debian-persistent/debian-persistent.ipxe || goto failed
 goto banner
 
