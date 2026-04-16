@@ -2,6 +2,8 @@
         logs-dhcp logs-http logs-nfs apply-env \
         extract-install extract-live setup-persistent extract-winpe
 
+REQUIRED_TFTP_BINARIES := tftp/undionly.kpxe tftp/ipxe.efi tftp/snponly.efi
+
 # ─── Yardım ───────────────────────────────────────────────────
 help:
 	@echo ""
@@ -35,6 +37,17 @@ apply-env:
 
 # ─── Konteyner Yönetimi ───────────────────────────────────────
 start:
+	@missing=0; \
+	for f in $(REQUIRED_TFTP_BINARIES); do \
+		if [ ! -f "$$f" ]; then \
+			echo "[!] Eksik TFTP binary: $$f"; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ "$$missing" -eq 1 ]; then \
+		echo "[!] iPXE binary dosyalari eksik. scripts/setup.sh calistiriliyor..."; \
+		bash scripts/setup.sh; \
+	fi
 	@docker compose up -d
 	@PXE_IP=$$(grep '^PXE_SERVER_IP=' .env 2>/dev/null | cut -d= -f2); \
 	if [ -z "$$PXE_IP" ]; then PXE_IP="10.30.1.20"; fi; \

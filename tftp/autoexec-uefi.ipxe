@@ -1,0 +1,9 @@
+#!ipxe
+# UEFI iPXE ikinci asama: agi ac, sonra HTTP menuye zincirle
+dhcp || dhcp net0 || ifopen net0 || goto failed
+chain http://10.30.1.20/boot.ipxe || goto failed
+
+:failed
+echo [UEFI] Ag/HTTP hazir degil. net0/ip=${net0/ip} mac=${net0/mac}
+sleep 2
+shell
