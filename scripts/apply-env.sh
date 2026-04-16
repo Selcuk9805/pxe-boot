@@ -53,7 +53,13 @@ fi
 while IFS= read -r ipxe_file; do
     sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$ipxe_file"
     sed -i -E "s|^(set nfs-server[[:space:]]+)$IP_REGEX|\1$PXE_SERVER_IP|g" "$ipxe_file"
+    sed -i -E "s|^(isset \$\{next-server\} && set pxe_server \$\{next-server\} \|\| set pxe_server )$IP_REGEX|\1$PXE_SERVER_IP|g" "$ipxe_file"
 done < <(find "$PROJECT_DIR/http" -type f -name "*.ipxe")
+
+while IFS= read -r tftp_ipxe_file; do
+    sed -i -E "s|http://$IP_REGEX|http://$PXE_SERVER_IP|g" "$tftp_ipxe_file"
+    sed -i -E "s|^(isset \$\{next-server\} && set pxe_server \$\{next-server\} \|\| set pxe_server )$IP_REGEX|\1$PXE_SERVER_IP|g" "$tftp_ipxe_file"
+done < <(find "$PROJECT_DIR/tftp" -type f -name "*.ipxe*")
 
 # 3. TFTP Yönlendirme betikleri (autoexec.ipxe vb.)
 for tftp_file in "$PROJECT_DIR/tftp/"*.ipxe*; do

@@ -1,9 +1,13 @@
 #!ipxe
-# UEFI iPXE ikinci asama: agi ac, sonra HTTP menuye zincirle
-dhcp || dhcp net0 || ifopen net0 || goto failed
-chain http://10.30.1.20/boot.ipxe || goto failed
+# UEFI iPXE ikinci asama:
+# Hyper-V gibi ortamlarda bu asamada tekrar DHCP almak NIC'i dusurebilir.
+# Bu nedenle sadece arayuzu acip, mevcut PXE sunucusuna HTTP chain yap.
+isset ${next-server} && set pxe_server ${next-server} || set pxe_server 10.30.1.20
+ifopen net0 || goto failed
+chain http://${pxe_server}/boot.ipxe || goto failed
 
 :failed
 echo [UEFI] Ag/HTTP hazir degil. net0/ip=${net0/ip} mac=${net0/mac}
+echo [UEFI] next-server=${next-server} pxe_server=${pxe_server}
 sleep 2
 shell
