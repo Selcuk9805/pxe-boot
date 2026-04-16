@@ -28,7 +28,7 @@ echo ${esc:string}[2J${esc:string}[H
 
 # ── Ana Menü ────────────────────────────────────────────────
 :start
-menu -------------- Selcuk9805 Network Boot System --------------
+menu Selcuk9805 Network Boot System
 item --gap --   Sunucu : ${server-url}
 item --gap --   Istemci: IP: ${net0/ip}   MAC: ${net0/mac}
 item --gap --
