@@ -1,2 +1,17 @@
 #!ipxe
-chain http://10.30.1.20/boot.ipxe
+isset ${next-server} && set pxe_server ${next-server} || set pxe_server 10.30.1.20
+chain http://${pxe_server}/boot.ipxe || goto retry
+goto done
+
+:retry
+dhcp net0 || dhcp || goto failed
+chain http://${pxe_server}/boot.ipxe || goto failed
+goto done
+
+:failed
+echo [PXE] HTTP chain basarisiz. pxe_server=${pxe_server}
+echo [PXE] net0/ip=${net0/ip} net0/mac=${net0/mac}
+ifstat
+shell
+
+:done
