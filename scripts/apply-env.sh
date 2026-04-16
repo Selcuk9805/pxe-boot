@@ -44,8 +44,8 @@ fi
 # 1. IP Güncelleme
 if [ "$CURRENT_IP" != "$PXE_SERVER_IP" ]; then
     echo -e "${YELLOW}[!] IP adresi güncelleniyor: $CURRENT_IP -> $PXE_SERVER_IP${NC}"
-    # find ile .ipxe, .conf, .md ve Makefile dosyalarını bul ve değiştir
-    find "$PROJECT_DIR" -type f \( -name "*.ipxe" -o -name "dnsmasq.conf" -o -name "*.md" -o -name "Makefile" \) -exec sed -i "s/$CURRENT_IP/$PXE_SERVER_IP/g" {} +
+    # find ile .ipxe, .ipxe.0, .conf, .md ve Makefile dosyalarını bul ve değiştir
+    find "$PROJECT_DIR" -type f \( -name "*.ipxe" -o -name "*.ipxe.0" -o -name "dnsmasq.conf" -o -name "*.md" -o -name "Makefile" \) -exec sed -i "s/$CURRENT_IP/$PXE_SERVER_IP/g" {} +
 else
     echo -e "${GREEN}[✓] IP adresi zaten güncel: $PXE_SERVER_IP${NC}"
 fi
