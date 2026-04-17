@@ -78,6 +78,9 @@ sudo make setup-persistent
 # XFCE profili ile (grafik masaüstü)
 sudo PERSISTENT_PROFILE=xfce bash scripts/setup-persistent.sh
 
+# Kayitli MAC profillerini listele
+make persistent-list-clients
+
 # MAC'e özel persistent profil oluştur
 make persistent-add-client MAC=00:11:22:33:44:55
 

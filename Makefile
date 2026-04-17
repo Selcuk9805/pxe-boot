@@ -1,7 +1,7 @@
 .PHONY: setup prepare doctor start stop restart status logs clean help \
 		logs-dhcp logs-http logs-nfs apply-env \
 		extract-install extract-live setup-persistent extract-winpe \
-		persistent-add-client persistent-del-client persistent-fix-dev logs-enroll
+		persistent-add-client persistent-del-client persistent-list-clients persistent-fix-dev logs-enroll
 
 REQUIRED_TFTP_BINARIES := tftp/undionly.kpxe tftp/ipxe.efi tftp/snponly.efi
 REQUIRED_INSTALL_ASSETS := http/boot/debian-install/vmlinuz http/boot/debian-install/initrd.gz
@@ -30,6 +30,7 @@ help:
 	@echo "  make extract-install    Debian kurulum dosyaları hazırla"
 	@echo "  make extract-live ISO=  Debian Live ISO işle"
 	@echo "  make setup-persistent   Persistent NFS sistemi kur (root)"
+	@echo "  make persistent-list-clients         Kayitli MAC profillerini listele"
 	@echo "  make persistent-add-client MAC=..   MAC'e özel persistent profil oluştur"
 	@echo "  make persistent-del-client MAC=..   MAC'e özel persistent profil sil"
 	@echo "  make persistent-fix-dev  /dev/full gibi hatalı regular dosyaları temizle"
@@ -156,6 +157,9 @@ extract-live:
 
 setup-persistent:
 	@sudo bash scripts/setup-persistent.sh
+
+persistent-list-clients:
+	@bash scripts/manage-persistent-client.sh list
 
 persistent-add-client:
 	@if [ -z "$(MAC)" ]; then \

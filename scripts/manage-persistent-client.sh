@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # Kullanım:
+#   ./scripts/manage-persistent-client.sh list
 #   sudo ./scripts/manage-persistent-client.sh add 00:11:22:33:44:55
 #   sudo ./scripts/manage-persistent-client.sh del 00:11:22:33:44:55
 
@@ -21,24 +22,13 @@ fi
 ACTION="${1:-}"
 RAW_MAC="${2:-}"
 
-if [ "$(id -u)" -ne 0 ]; then
-    echo "[!] Root gerekli. sudo ile çalıştırın." >&2
+if [ -z "$ACTION" ]; then
+  echo "Kullanım:" >&2
+  echo "  $0 list" >&2
+  echo "  sudo $0 add <MAC>" >&2
+  echo "  sudo $0 del <MAC>" >&2
     exit 1
 fi
-
-if [ -z "$ACTION" ] || [ -z "$RAW_MAC" ]; then
-    echo "Kullanım: $0 <add|del> <MAC>" >&2
-    exit 1
-fi
-
-MAC=$(echo "$RAW_MAC" | tr '[:upper:]' '[:lower:]' | tr '-' ':')
-if ! [[ "$MAC" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]]; then
-    echo "[!] Geçersiz MAC: $RAW_MAC" >&2
-    exit 1
-fi
-
-CLIENT_DIR="$NFS_CLIENTS/$MAC"
-CLIENT_IPXE="$HTTP_CLIENTS/$MAC.ipxe"
 
 prepare_runtime_dirs() {
   local root="$1"
@@ -72,7 +62,55 @@ prepare_runtime_dirs() {
 mkdir -p "$NFS_CLIENTS" "$HTTP_CLIENTS"
 
 case "$ACTION" in
+  list)
+    echo ""
+    echo "Persistent istemci profilleri"
+    echo "-----------------------------------------------"
+    found=0
+    shopt -s nullglob
+    for d in "$NFS_CLIENTS"/*; do
+      [ -d "$d" ] || continue
+      mac="$(basename "$d")"
+      if [[ ! "$mac" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]]; then
+        continue
+      fi
+      found=1
+      size="$(du -sh "$d" 2>/dev/null | awk '{print $1}')"
+      updated="$(date -r "$d" '+%Y-%m-%d %H:%M' 2>/dev/null || echo '-')"
+      if [ -f "$HTTP_CLIENTS/$mac.ipxe" ]; then
+        ipxe="ok"
+      else
+        ipxe="missing"
+      fi
+      echo "MAC: $mac | boyut: $size | guncel: $updated | ipxe: $ipxe"
+    done
+    shopt -u nullglob
+    if [ "$found" -eq 0 ]; then
+      echo "(profil bulunamadi)"
+    fi
+    echo ""
+    ;;
+
   add)
+    if [ "$(id -u)" -ne 0 ]; then
+      echo "[!] Root gerekli. sudo ile çalıştırın." >&2
+      exit 1
+    fi
+
+    if [ -z "$RAW_MAC" ]; then
+      echo "Kullanım: sudo $0 add <MAC>" >&2
+      exit 1
+    fi
+
+    MAC=$(echo "$RAW_MAC" | tr '[:upper:]' '[:lower:]' | tr '-' ':')
+    if ! [[ "$MAC" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]]; then
+      echo "[!] Geçersiz MAC: $RAW_MAC" >&2
+      exit 1
+    fi
+
+    CLIENT_DIR="$NFS_CLIENTS/$MAC"
+    CLIENT_IPXE="$HTTP_CLIENTS/$MAC.ipxe"
+
     if [ ! -d "$NFS_BASE" ] || [ ! -f "$NFS_BASE/etc/debian_version" ]; then
       echo "[!] Önce base persistent sistemi kurun: sudo make setup-persistent" >&2
       exit 1
@@ -128,13 +166,32 @@ EOF
     ;;
 
   del)
+    if [ "$(id -u)" -ne 0 ]; then
+      echo "[!] Root gerekli. sudo ile çalıştırın." >&2
+      exit 1
+    fi
+
+    if [ -z "$RAW_MAC" ]; then
+      echo "Kullanım: sudo $0 del <MAC>" >&2
+      exit 1
+    fi
+
+    MAC=$(echo "$RAW_MAC" | tr '[:upper:]' '[:lower:]' | tr '-' ':')
+    if ! [[ "$MAC" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]]; then
+      echo "[!] Geçersiz MAC: $RAW_MAC" >&2
+      exit 1
+    fi
+
+    CLIENT_DIR="$NFS_CLIENTS/$MAC"
+    CLIENT_IPXE="$HTTP_CLIENTS/$MAC.ipxe"
+
     rm -rf "$CLIENT_DIR"
     rm -f "$CLIENT_IPXE"
     echo "[✓] MAC profili silindi: $MAC"
     ;;
 
   *)
-    echo "[!] Geçersiz işlem: $ACTION (add|del)" >&2
+    echo "[!] Geçersiz işlem: $ACTION (list|add|del)" >&2
     exit 1
     ;;
 esac
