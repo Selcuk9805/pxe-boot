@@ -141,10 +141,12 @@ create_dirs() {
         "$PROJECT_DIR/http/boot/debian-install"
         "$PROJECT_DIR/http/boot/debian-live/live"
         "$PROJECT_DIR/http/boot/debian-persistent"
+        "$PROJECT_DIR/http/boot/debian-persistent/clients"
         "$PROJECT_DIR/http/boot/winpe"
         "$PROJECT_DIR/isos"
         "$PROJECT_DIR/nfs/debian-live"
         "$PROJECT_DIR/nfs/persistent/base"
+        "$PROJECT_DIR/nfs/persistent/clients"
     )
 
     for dir in "${dirs[@]}"; do

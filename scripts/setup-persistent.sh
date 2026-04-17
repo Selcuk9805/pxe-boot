@@ -26,7 +26,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 NFS_BASE="$PROJECT_DIR/nfs/persistent/base"
+NFS_CLIENTS="$PROJECT_DIR/nfs/persistent/clients"
 BOOT_OUTPUT="$PROJECT_DIR/http/boot/debian-persistent"
+BOOT_CLIENTS="$PROJECT_DIR/http/boot/debian-persistent/clients"
 PERSISTENT_PROFILE="${PERSISTENT_PROFILE:-minimal}"
 NONINTERACTIVE="${NONINTERACTIVE:-0}"
 
@@ -74,7 +76,9 @@ fi
 # ── Debootstrap ──────────────────────────────────────────────
 step "Debian Bookworm debootstrap başlatılıyor..."
 mkdir -p "$NFS_BASE"
+mkdir -p "$NFS_CLIENTS"
 mkdir -p "$BOOT_OUTPUT"
+mkdir -p "$BOOT_CLIENTS"
 
 if [ -f "$NFS_BASE/etc/debian_version" ]; then
     warn "NFS base sistemi zaten mevcut. Atlanıyor."
@@ -146,10 +150,12 @@ warn "ÜNEMLİ: root şifresi 'pxeboot' olarak ayarlandı. Değiştirin!"
 # PermitRootLogin (lab ortamı için)
 sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' "$NFS_BASE/etc/ssh/sshd_config" 2>/dev/null || true
 
-# XFCE profili için varsayılan hedef: graphical
+# Varsayılan hedef: multi-user (PXE ortamlarda siyah ekranda imleç sorununu azaltır)
+mkdir -p "$NFS_BASE/etc/systemd/system"
+ln -sf /lib/systemd/system/multi-user.target "$NFS_BASE/etc/systemd/system/default.target"
 if [ "$PERSISTENT_PROFILE" = "xfce" ]; then
-    mkdir -p "$NFS_BASE/etc/systemd/system"
-    ln -sf /lib/systemd/system/graphical.target "$NFS_BASE/etc/systemd/system/default.target"
+    warn "XFCE paketleri kuruldu; varsayılan hedef multi-user olarak bırakıldı."
+    warn "Grafik oturum için login sonrası: startx veya systemctl set-default graphical.target"
 fi
 
 # NFS root için initrd'yi yeniden üret

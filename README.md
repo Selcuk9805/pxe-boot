@@ -8,7 +8,7 @@ Docker tabanlı PXE ortamı (DHCP Proxy + TFTP + HTTP + NFS).
 |---|-----|----------|
 | 1 | Debian 12 Kurulum | Netinstall (kernel/initrd HTTP) |
 | 2 | Debian 13 Live XFCE | Geçici oturum (squashfs HTTP fetch) |
-| 3 | Debian 12 Persistent | NFS root (kalıcı) |
+| 3 | Debian 12 Persistent | NFS root (kalıcı, MAC bazlı profil desteği) |
 | 4 | WinPE | wimboot + WIM |
 
 ---
@@ -77,7 +77,19 @@ sudo make setup-persistent
 
 # XFCE profili ile (grafik masaüstü)
 sudo PERSISTENT_PROFILE=xfce bash scripts/setup-persistent.sh
+
+# MAC'e özel persistent profil oluştur
+make persistent-add-client MAC=00:11:22:33:44:55
+
+# MAC'e özel persistent profili sil
+make persistent-del-client MAC=00:11:22:33:44:55
 ```
+
+Not:
+- Varsayılan durumda tüm istemciler `/nfs/persistent/base` kullanır.
+- `make persistent-add-client` sonrası ilgili MAC için
+    `/nfs/persistent/clients/<mac>` yolu kullanılır.
+- Bir cihazı sıfırlamak için `persistent-del-client` yeterlidir.
 
 ### WinPE (opsiyonel)
 

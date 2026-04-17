@@ -33,6 +33,7 @@ kernel ${server-url}/boot/debian-persistent/vmlinuz \
   netboot=nfs \
   nfsroot=${nfs-server}:${nfs-root} \
   ip=dhcp \
+  systemd.unit=multi-user.target \
   rw \
   console=tty0 \
   quiet

@@ -1,6 +1,7 @@
 .PHONY: setup prepare doctor start stop restart status logs clean help \
 		logs-dhcp logs-http logs-nfs apply-env \
-		extract-install extract-live setup-persistent extract-winpe
+		extract-install extract-live setup-persistent extract-winpe \
+		persistent-add-client persistent-del-client
 
 REQUIRED_TFTP_BINARIES := tftp/undionly.kpxe tftp/ipxe.efi tftp/snponly.efi
 REQUIRED_INSTALL_ASSETS := http/boot/debian-install/vmlinuz http/boot/debian-install/initrd.gz
@@ -28,6 +29,8 @@ help:
 	@echo "  make extract-install    Debian kurulum dosyaları hazırla"
 	@echo "  make extract-live ISO=  Debian Live ISO işle"
 	@echo "  make setup-persistent   Persistent NFS sistemi kur (root)"
+	@echo "  make persistent-add-client MAC=..   MAC'e özel persistent profil oluştur"
+	@echo "  make persistent-del-client MAC=..   MAC'e özel persistent profil sil"
 	@echo "  make extract-winpe ISO= WinPE ISO işle"
 	@echo "  ─────────────────────────────────────────────────"
 	@echo "  make clean              Konteynerleri sil (veri korunur)"
@@ -150,6 +153,20 @@ extract-live:
 
 setup-persistent:
 	@sudo bash scripts/setup-persistent.sh
+
+persistent-add-client:
+	@if [ -z "$(MAC)" ]; then \
+		echo "Kullanım: make persistent-add-client MAC=00:11:22:33:44:55"; \
+		exit 1; \
+	fi
+	@sudo bash scripts/manage-persistent-client.sh add "$(MAC)"
+
+persistent-del-client:
+	@if [ -z "$(MAC)" ]; then \
+		echo "Kullanım: make persistent-del-client MAC=00:11:22:33:44:55"; \
+		exit 1; \
+	fi
+	@sudo bash scripts/manage-persistent-client.sh del "$(MAC)"
 
 extract-winpe:
 	@if [ -z "$(ISO)" ]; then \

@@ -9,3 +9,4 @@
 /nfs/debian-live  *(ro,sync,no_subtree_check,no_root_squash,fsid=1)
 /nfs/persistent   *(rw,sync,no_subtree_check,no_root_squash,fsid=2)
 /nfs/persistent/base   *(rw,sync,no_subtree_check,no_root_squash,fsid=3)
+/nfs/persistent/clients   *(rw,sync,no_subtree_check,no_root_squash,fsid=4)
