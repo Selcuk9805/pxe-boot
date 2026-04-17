@@ -113,7 +113,18 @@ def ensure_profile(host: str, mac: str) -> None:
     HTTP_CLIENTS_DIR.mkdir(parents=True, exist_ok=True)
 
     client_dir = CLIENTS_DIR / mac
+    rebuild = False
+
     if not client_dir.exists():
+        rebuild = True
+    else:
+        # Eski hatalı kopyalarda /bin,/sbin symlinkleri kaçmış olabilir.
+        if not profile_looks_bootable(client_dir):
+            rebuild = True
+
+    if rebuild:
+        if client_dir.exists():
+            shutil.rmtree(client_dir, ignore_errors=True)
         copy_profile_tree(BASE_DIR, client_dir)
 
     sanitize_runtime_tree(client_dir)
@@ -144,7 +155,35 @@ def copy_profile_tree(src_root: Path, dst_root: Path) -> None:
             dirs[:] = []
             continue
 
-        dirs[:] = [d for d in dirs if not should_skip_path(rel_root / d)]
+        kept_dirs = []
+        for d in dirs:
+            rel_dir = rel_root / d
+            if should_skip_path(rel_dir):
+                continue
+
+            src_dir_path = root_path / d
+            dst_dir_path = (dst_root / rel_dir) if rel_root != Path(".") else (dst_root / d)
+
+            try:
+                st = os.lstat(src_dir_path)
+            except Exception:
+                continue
+
+            # /bin, /sbin, /lib gibi symlink dizinleri olduğu gibi korunmalı.
+            if stat.S_ISLNK(st.st_mode):
+                try:
+                    target = os.readlink(src_dir_path)
+                    dst_dir_path.parent.mkdir(parents=True, exist_ok=True)
+                    if dst_dir_path.exists() or dst_dir_path.is_symlink():
+                        dst_dir_path.unlink()
+                    os.symlink(target, dst_dir_path)
+                except Exception:
+                    pass
+                continue
+
+            kept_dirs.append(d)
+
+        dirs[:] = kept_dirs
 
         target_root = dst_root if rel_root == Path(".") else dst_root / rel_root
         target_root.mkdir(parents=True, exist_ok=True)
@@ -180,6 +219,21 @@ def copy_profile_tree(src_root: Path, dst_root: Path) -> None:
                     continue
             except Exception:
                 continue
+
+
+def profile_looks_bootable(root: Path) -> bool:
+    # Debian init path seçeneklerinden en az biri var olmalı.
+    init_candidates = [
+        root / "sbin" / "init",
+        root / "lib" / "systemd" / "systemd",
+        root / "usr" / "lib" / "systemd" / "systemd",
+    ]
+    has_init = any(p.exists() for p in init_candidates)
+
+    shell_candidates = [root / "bin" / "sh", root / "usr" / "bin" / "sh"]
+    has_shell = any(p.exists() for p in shell_candidates)
+
+    return has_init and has_shell
 
 
 def _safe_chmod(path: Path, mode: int) -> None:

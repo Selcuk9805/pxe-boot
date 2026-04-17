@@ -63,11 +63,6 @@ goto banner
 
 :debian-persist
 echo ${gr}>> Debian 12 Persistent (NFS root) yukleniyor...${nl}
-chain --autofree ${server-url}/boot/debian-persistent/clients/${net0/mac}.ipxe || goto persist-auto-enroll
-goto banner
-
-:persist-auto-enroll
-echo ${ye}>> MAC profili bulunamadi, auto-enroll deneniyor...${nl}
 chain --autofree ${server-url}/api/persistent/enroll.ipxe?mac=${net0/mac} || \
 chain --autofree ${server-url}/boot/debian-persistent/debian-persistent.ipxe || goto failed-persist
 goto banner
