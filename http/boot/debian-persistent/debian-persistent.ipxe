@@ -28,7 +28,7 @@ echo
 
 kernel ${server-url}/boot/debian-persistent/vmlinuz \
   root=/dev/nfs \
-  nfsroot=${nfs-server}:${nfs-root},tcp,vers=4 \
+  nfsroot=${nfs-server}:${nfs-root},tcp,v3 \
   ip=dhcp \
   rw \
   console=tty0 \
