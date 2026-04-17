@@ -40,6 +40,35 @@ fi
 CLIENT_DIR="$NFS_CLIENTS/$MAC"
 CLIENT_IPXE="$HTTP_CLIENTS/$MAC.ipxe"
 
+prepare_runtime_dirs() {
+  local root="$1"
+
+  mkdir -p "$root/dev" "$root/proc" "$root/sys" "$root/run" "$root/tmp" "$root/var/tmp"
+  chmod 755 "$root/dev" "$root/proc" "$root/sys" "$root/run"
+  chmod 1777 "$root/tmp" "$root/var/tmp"
+
+  # Volatile pseudo-fs içeriklerini kalıcı profile taşımayın
+  rm -rf "$root/proc"/* "$root/sys"/* "$root/run"/* || true
+
+  # /dev altında oluşmuş düzenli dosya tuzaklarını temizle
+  for devname in full null zero random urandom tty console; do
+    if [ -f "$root/dev/$devname" ] && [ ! -c "$root/dev/$devname" ]; then
+      rm -f "$root/dev/$devname"
+    fi
+  done
+
+  # Host root ile oluşturuluyorsa temel device node'larını garanti et
+  if command -v mknod >/dev/null 2>&1; then
+    [ -e "$root/dev/null" ]    || mknod -m 666 "$root/dev/null" c 1 3 || true
+    [ -e "$root/dev/zero" ]    || mknod -m 666 "$root/dev/zero" c 1 5 || true
+    [ -e "$root/dev/full" ]    || mknod -m 666 "$root/dev/full" c 1 7 || true
+    [ -e "$root/dev/random" ]  || mknod -m 666 "$root/dev/random" c 1 8 || true
+    [ -e "$root/dev/urandom" ] || mknod -m 666 "$root/dev/urandom" c 1 9 || true
+    [ -e "$root/dev/tty" ]     || mknod -m 666 "$root/dev/tty" c 5 0 || true
+    [ -e "$root/dev/console" ] || mknod -m 600 "$root/dev/console" c 5 1 || true
+  fi
+}
+
 mkdir -p "$NFS_CLIENTS" "$HTTP_CLIENTS"
 
 case "$ACTION" in
@@ -50,12 +79,21 @@ case "$ACTION" in
     fi
 
     if command -v rsync >/dev/null 2>&1; then
-      rsync -a --delete "$NFS_BASE/" "$CLIENT_DIR/"
+      rsync -a --delete \
+        --exclude='/dev/*' \
+        --exclude='/proc/*' \
+        --exclude='/sys/*' \
+        --exclude='/run/*' \
+        --exclude='/tmp/*' \
+        --exclude='/var/tmp/*' \
+        "$NFS_BASE/" "$CLIENT_DIR/"
     else
       rm -rf "$CLIENT_DIR"
       mkdir -p "$CLIENT_DIR"
       cp -a "$NFS_BASE/." "$CLIENT_DIR/"
     fi
+
+    prepare_runtime_dirs "$CLIENT_DIR"
 
     cat > "$CLIENT_IPXE" <<EOF
 #!ipxe
@@ -82,7 +120,6 @@ boot
 EOF
 
     chmod 644 "$CLIENT_IPXE"
-    chmod -R 755 "$CLIENT_DIR"
     chown -R root:root "$CLIENT_DIR"
 
     echo "[✓] MAC profili oluşturuldu: $MAC"

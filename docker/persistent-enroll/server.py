@@ -2,6 +2,7 @@
 import os
 import re
 import shutil
+import stat
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -114,8 +115,56 @@ def ensure_profile(host: str, mac: str) -> None:
     if not client_dir.exists():
         shutil.copytree(BASE_DIR, client_dir, dirs_exist_ok=False)
 
+    sanitize_runtime_tree(client_dir)
+
     client_ipxe = HTTP_CLIENTS_DIR / f"{mac}.ipxe"
     client_ipxe.write_text(client_ipxe_content(host, mac), encoding="utf-8")
+
+
+def _safe_chmod(path: Path, mode: int) -> None:
+    try:
+        path.chmod(mode)
+    except Exception:
+        pass
+
+
+def sanitize_runtime_tree(root: Path) -> None:
+    (root / "dev").mkdir(parents=True, exist_ok=True)
+    (root / "proc").mkdir(parents=True, exist_ok=True)
+    (root / "sys").mkdir(parents=True, exist_ok=True)
+    (root / "run").mkdir(parents=True, exist_ok=True)
+    (root / "tmp").mkdir(parents=True, exist_ok=True)
+    (root / "var" / "tmp").mkdir(parents=True, exist_ok=True)
+
+    _safe_chmod(root / "dev", 0o755)
+    _safe_chmod(root / "proc", 0o755)
+    _safe_chmod(root / "sys", 0o755)
+    _safe_chmod(root / "run", 0o755)
+    _safe_chmod(root / "tmp", 0o1777)
+    _safe_chmod(root / "var" / "tmp", 0o1777)
+
+    # Kalıcı profile pseudo-fs runtime kalıntıları taşınmasın
+    for volatile in (root / "proc", root / "sys", root / "run"):
+        for child in volatile.iterdir():
+            try:
+                if child.is_dir() and not child.is_symlink():
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
+            except Exception:
+                pass
+
+    # /dev altında yanlışlıkla oluşan düzenli dosyalar disk şişirebilir
+    for devname in ("full", "null", "zero", "random", "urandom", "tty", "console"):
+        devpath = root / "dev" / devname
+        try:
+            st = os.lstat(devpath)
+            if stat.S_ISREG(st.st_mode):
+                devpath.unlink(missing_ok=True)
+        except FileNotFoundError:
+            continue
+        except Exception:
+            pass
 
 
 class Handler(BaseHTTPRequestHandler):

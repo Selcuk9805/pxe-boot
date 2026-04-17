@@ -111,8 +111,11 @@ step "Sistem yapılandırması..."
 cat > "$NFS_BASE/etc/fstab" <<EOF
 # NFS root sistemi için fstab
 proc /proc proc defaults 0 0
+devtmpfs /dev devtmpfs mode=0755,nosuid 0 0
 sysfs /sys sysfs defaults 0 0
+tmpfs /run tmpfs mode=0755,nosuid,nodev 0 0
 tmpfs /tmp tmpfs defaults,size=256m 0 0
+tmpfs /var/tmp tmpfs defaults,size=128m 0 0
 EOF
 
 # /etc/hostname
@@ -185,8 +188,13 @@ log "Kernel ve initrd kopyalandı."
 
 # ── NFS İzinleri ─────────────────────────────────────────────
 step "NFS dizin izinleri ayarlanıyor..."
-chmod -R 755 "$NFS_BASE"
 chown -R root:root "$NFS_BASE"
+chmod 755 "$NFS_BASE"
+
+# Runtime dizin izinleri (recursive chmod yerine hedefli izinler)
+mkdir -p "$NFS_BASE/dev" "$NFS_BASE/proc" "$NFS_BASE/sys" "$NFS_BASE/run" "$NFS_BASE/tmp" "$NFS_BASE/var/tmp"
+chmod 755 "$NFS_BASE/dev" "$NFS_BASE/proc" "$NFS_BASE/sys" "$NFS_BASE/run"
+chmod 1777 "$NFS_BASE/tmp" "$NFS_BASE/var/tmp"
 
 # ── Özet ─────────────────────────────────────────────────────
 echo ""

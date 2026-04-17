@@ -83,6 +83,9 @@ make persistent-add-client MAC=00:11:22:33:44:55
 
 # MAC'e özel persistent profili sil
 make persistent-del-client MAC=00:11:22:33:44:55
+
+# /dev/full vb. hatalı regular dosyaları temizle
+make persistent-fix-dev
 ```
 
 Not:
@@ -167,5 +170,19 @@ docker compose restart pxe-enroll pxe-http
 ```
 
 Not: Sistem bu durumda da shared persistent profile fallback yapar.
+
+### Persistent root disk'i şişiyor (/dev/full büyüyor)
+
+Belirti: istemci boot ederken "alan kalmadı" hatası ve hostta
+`nfs/persistent/clients/<mac>/dev/full` dosyasının çok büyümesi.
+
+Çözüm:
+
+```bash
+make persistent-fix-dev
+```
+
+Bu komut hatalı regular `/dev/*` dosyalarını temizler ve temel device node
+iskeletini tekrar kurar.
 
 Detaylı ağ notları: [NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)
