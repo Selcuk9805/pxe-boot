@@ -157,4 +157,15 @@ make doctor
 docker compose restart pxe-nfs
 ```
 
+### Persistent auto-enroll 5xx
+
+Eğer boot ekranında `/api/persistent/enroll.ipxe` için 5xx görüyorsanız:
+
+```bash
+make logs-enroll
+docker compose restart pxe-enroll pxe-http
+```
+
+Not: Sistem bu durumda da shared persistent profile fallback yapar.
+
 Detaylı ağ notları: [NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)

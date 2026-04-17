@@ -15,10 +15,15 @@ MAC_RE = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
 
 
 def load_dotenv(path: Path) -> None:
-    if not path.exists():
+    if not path.exists() or not path.is_file():
         return
 
-    for line in path.read_text(encoding="utf-8").splitlines():
+    try:
+        content = path.read_text(encoding="utf-8")
+    except Exception:
+        return
+
+    for line in content.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
