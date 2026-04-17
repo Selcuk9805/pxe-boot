@@ -28,10 +28,10 @@ echo  +--------------------------------+
 echo
 
 kernel ${server-url}/boot/debian-persistent/vmlinuz \
-  boot=nfs \
   root=/dev/nfs \
-  rootfstype=nfs \
-  nfsroot=${nfs-server}:${nfs-root},tcp,vers=3 \
+  boot=nfs \
+  netboot=nfs \
+  nfsroot=${nfs-server}:${nfs-root} \
   ip=dhcp \
   rw \
   console=tty0 \
