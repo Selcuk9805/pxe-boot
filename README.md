@@ -52,7 +52,7 @@ make logs-http
 - `make start`:
     - sadece servisleri başlatır (otomatik indirme yapmaz)
 - `make doctor`:
-    - gerekli artifact ve dnsmasq config kontrolü
+    - gerekli artifact ve host NFS modül kontrolü
 
 ---
 
@@ -87,9 +87,11 @@ make persistent-del-client MAC=00:11:22:33:44:55
 
 Not:
 - Varsayılan durumda tüm istemciler `/nfs/persistent/base` kullanır.
+- Persistent açılırken MAC'e özel dosya yoksa sistem artık otomatik profile oluşturmayı dener.
 - `make persistent-add-client` sonrası ilgili MAC için
     `/nfs/persistent/clients/<mac>` yolu kullanılır.
 - Bir cihazı sıfırlamak için `persistent-del-client` yeterlidir.
+- Otomatik kayıt kapatmak için `docker-compose.yml` içinde `AUTO_ENROLL_PERSISTENT=0` yapabilirsiniz.
 
 ### WinPE (opsiyonel)
 
@@ -106,6 +108,7 @@ make extract-winpe ISO=isos/winpe.iso
 | pxe-dhcp | dnsmasq (DHCP Proxy + TFTP) | 67/udp, 69/udp |
 | pxe-http | nginx (boot dosyaları) | 80/tcp |
 | pxe-nfs | NFS (persistent) | 2049/tcp, 111/tcp+udp |
+| pxe-enroll | Persistent auto-enroll API | internal (8080) |
 
 > `pxe-dhcp` host network kullanır. DHCP broadcast için gereklidir.
 

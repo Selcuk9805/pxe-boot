@@ -1,7 +1,7 @@
 .PHONY: setup prepare doctor start stop restart status logs clean help \
 		logs-dhcp logs-http logs-nfs apply-env \
 		extract-install extract-live setup-persistent extract-winpe \
-		persistent-add-client persistent-del-client
+		persistent-add-client persistent-del-client logs-enroll
 
 REQUIRED_TFTP_BINARIES := tftp/undionly.kpxe tftp/ipxe.efi tftp/snponly.efi
 REQUIRED_INSTALL_ASSETS := http/boot/debian-install/vmlinuz http/boot/debian-install/initrd.gz
@@ -25,6 +25,7 @@ help:
 	@echo "  make logs-dhcp          dnsmasq (DHCP/TFTP) logları"
 	@echo "  make logs-http          Nginx logları"
 	@echo "  make logs-nfs           NFS sunucu logları"
+	@echo "  make logs-enroll        Persistent auto-enroll logları"
 	@echo "  ─────────────────────────────────────────────────"
 	@echo "  make extract-install    Debian kurulum dosyaları hazırla"
 	@echo "  make extract-live ISO=  Debian Live ISO işle"
@@ -90,8 +91,6 @@ doctor:
 	@for f in $(REQUIRED_LIVE_ASSETS) $(REQUIRED_PERSISTENT_ASSETS); do \
 		if [ -f "$$f" ]; then echo "[OK] $$f"; else echo "[MISSING] $$f"; fi; \
 	done
-	@echo "[i] dnsmasq config test"
-	@dnsmasq --test --conf-file=config/dnsmasq/dnsmasq.conf || true
 	@echo "[i] Host NFS kernel modulleri"
 	@if command -v lsmod >/dev/null 2>&1; then \
 		if lsmod | grep -q '^nfs\b'; then echo "[OK] nfs modulu yuklu"; else echo "[MISSING] nfs modulu"; fi; \
@@ -139,6 +138,9 @@ logs-http:
 
 logs-nfs:
 	@docker compose logs -f pxe-nfs
+
+logs-enroll:
+	@docker compose logs -f pxe-enroll
 
 # ─── İçerik Hazırlama ────────────────────────────────────────
 extract-install:
