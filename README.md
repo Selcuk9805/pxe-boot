@@ -133,4 +133,13 @@ showmount -e <PXE_SERVER_IP>
 make logs-nfs
 ```
 
+Eğer `pxe-nfs` logunda `kernel module nfs is missing` görürseniz:
+
+```bash
+sudo modprobe nfs
+sudo modprobe nfsd
+make doctor
+docker compose restart pxe-nfs
+```
+
 Detaylı ağ notları: [NETWORK_SETUP_NOTES.md](NETWORK_SETUP_NOTES.md)

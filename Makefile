@@ -89,6 +89,16 @@ doctor:
 	done
 	@echo "[i] dnsmasq config test"
 	@dnsmasq --test --conf-file=config/dnsmasq/dnsmasq.conf || true
+	@echo "[i] Host NFS kernel modulleri"
+	@if command -v lsmod >/dev/null 2>&1; then \
+		if lsmod | grep -q '^nfs\b'; then echo "[OK] nfs modulu yuklu"; else echo "[MISSING] nfs modulu"; fi; \
+		if lsmod | grep -q '^nfsd\b'; then echo "[OK] nfsd modulu yuklu"; else echo "[MISSING] nfsd modulu"; fi; \
+		if ! lsmod | grep -q '^nfs\b' || ! lsmod | grep -q '^nfsd\b'; then \
+			echo "[HINT] sudo modprobe nfs && sudo modprobe nfsd"; \
+		fi; \
+	else \
+		echo "[WARN] lsmod komutu bulunamadi, modul kontrolu atlandi"; \
+	fi
 
 apply-env:
 	@bash scripts/apply-env.sh

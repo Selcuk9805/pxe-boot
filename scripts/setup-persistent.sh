@@ -130,6 +130,13 @@ auto eth0
 iface eth0 inet dhcp
 EOF
 
+# initramfs-tools: NFS root boot zorunlu
+if [ -f "$NFS_BASE/etc/initramfs-tools/initramfs.conf" ]; then
+    sed -i 's/^BOOT=.*/BOOT=nfs/' "$NFS_BASE/etc/initramfs-tools/initramfs.conf" || true
+    grep -q '^BOOT=' "$NFS_BASE/etc/initramfs-tools/initramfs.conf" || \
+        echo 'BOOT=nfs' >> "$NFS_BASE/etc/initramfs-tools/initramfs.conf"
+fi
+
 # Root şifresi ayarla
 info "Root şifresi ayarlanıyor (varsayılan: pxeboot)..."
 echo "root:pxeboot" | chroot "$NFS_BASE" chpasswd
@@ -144,6 +151,10 @@ if [ "$PERSISTENT_PROFILE" = "xfce" ]; then
     mkdir -p "$NFS_BASE/etc/systemd/system"
     ln -sf /lib/systemd/system/graphical.target "$NFS_BASE/etc/systemd/system/default.target"
 fi
+
+# NFS root için initrd'yi yeniden üret
+step "Initramfs NFS-boot modu icin yeniden olusturuluyor..."
+chroot "$NFS_BASE" update-initramfs -u -k all
 
 # ── Kernel + initrd Kopyalama ────────────────────────────────
 step "Kernel ve initrd HTTP sunucusuna kopyalanıyor..."

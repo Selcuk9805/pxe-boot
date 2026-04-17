@@ -86,6 +86,52 @@ check_deps() {
     log "Tüm bağımlılıklar mevcut."
 }
 
+# ── NFS Kernel Modül Kontrolü ───────────────────────────────
+check_nfs_kernel_modules() {
+    step "NFS kernel modülleri kontrol ediliyor..."
+
+    if ! command -v lsmod &>/dev/null; then
+        warn "lsmod bulunamadı, NFS modül kontrolü atlandı."
+        return
+    fi
+
+    local missing=0
+    if lsmod | grep -q '^nfs\b'; then
+        log "nfs modülü yüklü."
+    else
+        warn "nfs modülü yüklü değil."
+        missing=1
+    fi
+
+    if lsmod | grep -q '^nfsd\b'; then
+        log "nfsd modülü yüklü."
+    else
+        warn "nfsd modülü yüklü değil."
+        missing=1
+    fi
+
+    if [ "$missing" -eq 1 ]; then
+        warn "NFS container için host modülleri gereklidir (nfs, nfsd)."
+        if ask_yes_no "Modulleri simdi yuklemeyi deneyeyim mi?" 1; then
+            if [ "$(id -u)" -eq 0 ]; then
+                modprobe nfs || true
+                modprobe nfsd || true
+            else
+                sudo modprobe nfs || true
+                sudo modprobe nfsd || true
+            fi
+        fi
+
+        if lsmod | grep -q '^nfs\b' && lsmod | grep -q '^nfsd\b'; then
+            log "NFS modülleri yüklendi."
+        else
+            warn "NFS modülleri halen eksik."
+            warn "  sudo modprobe nfs"
+            warn "  sudo modprobe nfsd"
+        fi
+    fi
+}
+
 # ── Dizin Yapısı ─────────────────────────────────────────────
 create_dirs() {
     step "Dizin yapısı oluşturuluyor..."
@@ -400,6 +446,7 @@ print_next_steps() {
 main() {
     print_banner
     check_deps
+    check_nfs_kernel_modules
     create_dirs
     create_env
     download_ipxe
