@@ -13,6 +13,7 @@ HTTP_CLIENTS_DIR = Path("/http/boot/debian-persistent/clients")
 DEFAULT_SCRIPT = "/boot/debian-persistent/debian-persistent.ipxe"
 
 MAC_RE = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
+SKIP_TOP_LEVEL = {"dev", "proc", "sys", "run", "tmp"}
 
 
 def load_dotenv(path: Path) -> None:
@@ -113,12 +114,72 @@ def ensure_profile(host: str, mac: str) -> None:
 
     client_dir = CLIENTS_DIR / mac
     if not client_dir.exists():
-        shutil.copytree(BASE_DIR, client_dir, dirs_exist_ok=False)
+        copy_profile_tree(BASE_DIR, client_dir)
 
     sanitize_runtime_tree(client_dir)
 
     client_ipxe = HTTP_CLIENTS_DIR / f"{mac}.ipxe"
     client_ipxe.write_text(client_ipxe_content(host, mac), encoding="utf-8")
+
+
+def should_skip_path(rel: Path) -> bool:
+    parts = rel.parts
+    if not parts:
+        return False
+    if parts[0] in SKIP_TOP_LEVEL:
+        return True
+    if len(parts) >= 2 and parts[0] == "var" and parts[1] == "tmp":
+        return True
+    return False
+
+
+def copy_profile_tree(src_root: Path, dst_root: Path) -> None:
+    dst_root.mkdir(parents=True, exist_ok=False)
+
+    for root, dirs, files in os.walk(src_root, topdown=True, followlinks=False):
+        root_path = Path(root)
+        rel_root = root_path.relative_to(src_root)
+
+        if rel_root != Path(".") and should_skip_path(rel_root):
+            dirs[:] = []
+            continue
+
+        dirs[:] = [d for d in dirs if not should_skip_path(rel_root / d)]
+
+        target_root = dst_root if rel_root == Path(".") else dst_root / rel_root
+        target_root.mkdir(parents=True, exist_ok=True)
+
+        for name in files:
+            rel_file = name if rel_root == Path(".") else str(rel_root / name)
+            rel_path = Path(rel_file)
+            if should_skip_path(rel_path):
+                continue
+
+            src_path = root_path / name
+            dst_path = dst_root / rel_path
+
+            try:
+                st = os.lstat(src_path)
+            except Exception:
+                continue
+
+            mode = st.st_mode
+
+            try:
+                if stat.S_ISREG(mode):
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src_path, dst_path, follow_symlinks=False)
+                elif stat.S_ISLNK(mode):
+                    target = os.readlink(src_path)
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    if dst_path.exists() or dst_path.is_symlink():
+                        dst_path.unlink()
+                    os.symlink(target, dst_path)
+                else:
+                    # Char/block device, fifo, socket vb. kopyalanmaz.
+                    continue
+            except Exception:
+                continue
 
 
 def _safe_chmod(path: Path, mode: int) -> None:
